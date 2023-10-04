@@ -1,0 +1,18 @@
+site_name: r2yara Documentation
+strict: true
+theme: readthedocs
+docs_dir: .
+pages:
+- Home: 
+  - Index: 'index.md'
+  - Installation: 'installation/installation.md'
+  - Tests: 'installation/tests.md'
+  - Use Cases: 'use_cases.md'
+- r2yara module:
+  - Imports: 'r2yara/imports.md'
+  - Exports: 'r2yara/exports.md'
+  - Hash: 'r2yara/hashes.md'
+  - Sections: 'r2yara/sections.md'
+  - Libraries: 'r2yara/lib.md'
+  - Resources: 'r2yara/resources.md'
+  - Info: 'r2yara/info.md'

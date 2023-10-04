@@ -1,0 +1,325 @@
+commit cc10c5aadb38773533d443aff25fe2ad0fcc6f3b
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 17:58:50 2017 +0200
+
+    Trying
+
+commit dabd464481900335426722b54bd48ebc0fd44322
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 17:39:18 2017 +0200
+
+    Fixed tests
+
+commit 374d720e7749fedcff0828c7e1674d5cb2d5cb29
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 16:57:54 2017 +0200
+
+    another test
+
+commit 84eebd094655e5c0536360a2d99449bb914697fe
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 15:54:06 2017 +0200
+
+    Final steps
+
+commit 4eb85bcaf9009c6c91b4500218007c9f798a50ac
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 15:47:42 2017 +0200
+
+    Fixed filename
+
+commit bac040087981fb15bccb7f48a6294966157bd8a9
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 13:28:15 2017 +0200
+
+    another try
+
+commit df1b859ac8d4928ec795722fa272a70ad4fa24fb
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 13:23:28 2017 +0200
+
+    another try
+
+commit b5e488870ec5e6b8774e5a6f688ad7e43e1efcd3
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 13:16:16 2017 +0200
+
+    Added travis badge
+
+commit 6a149d4a46379af8609274811861ec8b1f455424
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 11:51:10 2017 +0200
+
+    Install radare2 missing
+
+commit 12eebf39433a1644082356f27a4b5ebae6d85c2a
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 11:46:51 2017 +0200
+
+    Anoooother try
+
+commit 254671c46215a9199d5ef118774a43056dda9049
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 11:37:14 2017 +0200
+
+    Another try
+
+commit 568a13c7c2f4f94ada682ea6b689f4d9bda8af66
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 11:28:19 2017 +0200
+
+    Missing file
+
+commit 8f2d03b0a06f3ff4126da9d0deed8e70625c5d11
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 11:25:19 2017 +0200
+
+    Second try
+
+commit ec7c9bf83a4b6ca42eeee26f350eec9ae07402c4
+Author: Antonio S <asanchez@plutec.net>
+Date:   Wed Sep 6 11:19:52 2017 +0200
+
+    First tests for travis
+
+commit 8d1d72309a26e880accfc535843a31411a920e0a
+Author: Antonio S <asanchez@plutec.net>
+Date:   Thu Jul 27 20:04:22 2017 +0200
+
+    Added doc information to generate reports
+
+commit 9729d8ccc4946fe9642ddc0c62726938d4235a7c
+Author: Antonio S <asanchez@plutec.net>
+Date:   Thu Jul 27 20:04:09 2017 +0200
+
+    To use with python
+
+commit 92a00fade571100bfb5350a1e315bf3508940917
+Author: Antonio S <asanchez@plutec.net>
+Date:   Thu Jul 27 19:43:50 2017 +0200
+
+    Added reports for more bins
+
+commit ce7b0b5d6ecd383d4a753b8fe4a8c5ba2de33090
+Author: Antonio S <asanchez@plutec.net>
+Date:   Thu Jul 27 19:43:38 2017 +0200
+
+    changed tests for hashes
+
+commit b0b51aae477d74fde1f05ebb8633abc939df44ef
+Author: Antonio S <asanchez@plutec.net>
+Date:   Thu Jul 27 19:43:09 2017 +0200
+
+    Added tests for reports
+
+commit 443c944412c8aa67861ffff5e31c21fdcddfea06
+Author: Antonio S <asanchez@plutec.net>
+Date:   Thu Jul 27 19:42:19 2017 +0200
+
+    Added more hashes
+
+commit c1d8c58101115332b0f850e135d87c219cd11629
+Author: Antonio S <asanchez@plutec.net>
+Date:   Thu Jul 27 19:09:26 2017 +0200
+
+    Created generate_report.py script
+
+commit f6f1e5f2b0fc77363b0f18008c7d3e9ef2f3331e
+Author: Antonio S <asanchez@plutec.net>
+Date:   Thu Jul 27 19:08:49 2017 +0200
+
+    Fixed some problems
+
+commit 14d105e37989752a15839f5108ed2168406ab628
+Author: Antonio S <asanchez@plutec.net>
+Date:   Tue Jul 11 14:50:41 2017 +0200
+
+    Missing header un License
+
+commit d8e689fc040e78efa5eaec56f23fae066ca1e5e2
+Author: Antonio S <asanchez@plutec.net>
+Date:   Tue Jul 11 14:50:09 2017 +0200
+
+    Added badge
+
+commit 0c87bc099dc110dbe72543a2cd493397c78a530d
+Merge: d5b8493 cdc7c19
+Author: Antonio S <asanchez@plutec.net>
+Date:   Tue Jul 11 14:48:12 2017 +0200
+
+    Merge branch 'master' of github.com:Yara-Rules/r2yara
+
+commit d5b8493c9964194feab70ee4853988baab3d1384
+Author: Antonio S <asanchez@plutec.net>
+Date:   Tue Jul 11 14:47:56 2017 +0200
+
+    Changed license to BSD 3-clause
+
+commit cdc7c1961cdc306f7fb0545e53ca0fbf6282d253
+Author: Antonio Sánchez <asanchez@plutec.net>
+Date:   Wed Jul 5 18:26:23 2017 +0200
+
+    Added license in README
+
+commit 7b9fc2c42eb9e43090b15fdff3c2fb6332b26b22
+Merge: 47b2204 02ff69a
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Wed Jul 5 18:16:28 2017 +0200
+
+    Merge branch 'master' of github.com:Yara-Rules/r2yara
+
+commit 47b22044b41e2c1b05c2a626022882221db5fd2b
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Wed Jul 5 18:16:21 2017 +0200
+
+    Fixed #2
+
+commit 02ff69a8f369ee416510c02d95a4210426adfe0f
+Author: Antonio Sánchez <asanchez@plutec.net>
+Date:   Wed Jul 5 17:22:43 2017 +0200
+
+    Update README.md
+
+commit f85c02d0af0f209cba19cce589e1c6ed75560b25
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Wed Jul 5 17:12:48 2017 +0200
+
+    Added first source code version
+
+commit 3efd8f300ac44611670b5b39a74f47e4f17fbd2a
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Wed Jul 5 17:12:24 2017 +0200
+
+    More documentation
+
+commit 0a809762cbc1f507987493d22db842fffb61ed5e
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Wed Jul 5 16:34:39 2017 +0200
+
+    Changed README
+
+commit 0bd150e11e03b8cd3e1a5dcf7b47db393ae304f1
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Wed Jul 5 16:33:49 2017 +0200
+
+    Added installation instructions
+
+commit 456eb7260dad5beebf35887793826bea545453cc
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Mon Jul 3 15:34:24 2017 +0200
+
+    Added info
+
+commit 632b55912e9f5a009f7cc4ed5c638056845e7443
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Mon Jul 3 15:03:45 2017 +0200
+
+    Added hash use
+
+commit 4d485d9228115b944311d092a9f0725d41d31df5
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Mon Jul 3 14:54:49 2017 +0200
+
+    Added resources
+
+commit bb66899243dcd4a7f9cfe04964d8b994013a8711
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Fri Jun 16 15:21:52 2017 +0200
+
+    Added exports docs and tests
+
+commit 50504a9b5712caa768423f1f5a97561020a89125
+Author: mmorenog <mmorenog@users.noreply.github.com>
+Date:   Thu Jun 15 18:08:51 2017 +0200
+
+    Update index.md
+
+commit 35d060edf61a65870d5cad8f5f8d87c529ae5581
+Author: mmorenog <mmorenog@users.noreply.github.com>
+Date:   Thu Jun 15 18:07:55 2017 +0200
+
+    Delete post.md
+
+commit ff38550ece546cb601ac0f818f3adb9c88030b47
+Author: mmorenog <mmorenog@users.noreply.github.com>
+Date:   Thu Jun 15 18:07:25 2017 +0200
+
+    Create index.md
+
+commit 6cd9fddb4fd6262bbd503e10c9a3dd6b478f2ca7
+Author: mmorenog <mmorenog@users.noreply.github.com>
+Date:   Thu Jun 15 18:06:52 2017 +0200
+
+    Create index.md
+
+commit 6b72867b689a373acdd1cfd4abfbbdb5e4c7808c
+Author: mmorenog <mmorenog@users.noreply.github.com>
+Date:   Thu Jun 15 18:05:11 2017 +0200
+
+    Create index.md
+
+commit 375b4f955acd7ba3cb151f652bb7204182aa11b8
+Author: mmorenog <mmorenog@users.noreply.github.com>
+Date:   Thu Jun 15 18:04:23 2017 +0200
+
+    Update index.md
+
+commit ff78a9c2dd0c18bb3bec5e98755c267aa3b0c496
+Author: mmorenog <mmorenog@users.noreply.github.com>
+Date:   Thu Jun 15 18:03:47 2017 +0200
+
+    Create index.md
+
+commit 89bec16c5815a126d579ba203dd92151fb8d0ab6
+Author: mmorenog <mmorenog@users.noreply.github.com>
+Date:   Thu Jun 15 16:32:58 2017 +0200
+
+    Create post.md
+
+commit cdb4b3b4b6bdba567e5ec585a4b4511b5713e162
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Thu Jun 15 09:48:22 2017 +0200
+
+    Added doc for libraries
+
+commit 659b9f040119981e88f621311ec38839a16bbd32
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Thu Jun 15 09:44:52 2017 +0200
+
+    Added tests for section functions
+
+commit 824c48e8a9da797b015fca82a32a9aae312092d1
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Thu Jun 15 09:41:39 2017 +0200
+
+    Added tests for lib
+
+commit de9571cf9124276eec10f14e9897ebc7f21da03a
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Wed Jun 14 12:23:17 2017 +0200
+
+    Added basic tests, under development
+
+commit 7d4b47aaaed52a399d1efd9d91da4cecf55615bf
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Wed Jun 14 12:22:13 2017 +0200
+
+    doc for imports
+
+commit 2193c528a5f20f9cca1e02533f518f1b3cb044dc
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Tue Jun 13 12:28:04 2017 +0200
+
+    Added sections doc
+
+commit 17ca8d08ed7bf390998456b17661a625dcb4ac63
+Author: Antonio S <asanchez@hispasec.com>
+Date:   Tue Jun 13 10:06:53 2017 +0200
+
+    First commit
+
+commit d79d2a041f5d97a15a6421db603c4977177655ad
+Author: mmorenog <mmorenog@users.noreply.github.com>
+Date:   Fri Jan 27 13:38:30 2017 +0100
+
+    Initial commit
