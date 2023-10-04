@@ -1,0 +1,9 @@
+include config.mk
+
+mrproper: clean
+	rm -f config.mk
+
+RULESDIR=$(R2PM_USRPLUGIN_DIR)/rules-yara3
+
+all clean user-install install symstall user-uninstall uninstall:
+	$(MAKE) -C src $<

@@ -2,6 +2,10 @@
 
 r2 and yara, better together!
 
+## License and Author
+
+LGPLv3 - Copyright 2014-2023 - pancake, jvoisin, jfrankowski
+
 ## Installation
 
 After running this command:
