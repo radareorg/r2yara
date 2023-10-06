@@ -3,7 +3,7 @@
 #include <r_core.h>
 #include <yara.h>
 
-#if R2_VERSION_NUMBER <= 50809
+#if R2_VERSION_NUMBER < 50809
 static inline char *r_str_after(char *s, char c) {
 	if (s) {
 		char *p = strchr (s, c);
@@ -596,7 +596,7 @@ static int cmd_yara_fini() {
 }
 
 RCorePlugin r_core_plugin_yara = {
-#if R2_VERSION_NUMBER <= 50809
+#if R2_VERSION_NUMBER < 50809
 	.name = "yara",
 	.desc = "YARA integration",
 	.license = "LGPL",
