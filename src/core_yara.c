@@ -1,9 +1,20 @@
-
-
 /* radare - LGPLv3 - Copyright 2014-2023 - pancake, jvoisin, jfrankowski */
 
 #include <r_core.h>
 #include <yara.h>
+
+#if R2_VERSION_NUMBER <= 50809
+static inline char *r_str_after(char *s, char c) {
+	if (s) {
+		char *p = strchr (s, c);
+		if (p) {
+			*p++ = 0;
+			return p;
+		}
+	}
+	return NULL;
+}
+#endif
 
 // TODO: remove globals!
 static R_TH_LOCAL bool initialized = false;
@@ -585,12 +596,19 @@ static int cmd_yara_fini() {
 }
 
 RCorePlugin r_core_plugin_yara = {
+#if R2_VERSION_NUMBER <= 50809
+	.name = "yara",
+	.desc = "YARA integration",
+	.license = "LGPL",
+	.version = "0.1.2",
+#else
 	.meta = {
 		.name = "yara",
 		.desc = "YARA integration",
 		.license = "LGPL",
 		.version = "0.1.2",
 	},
+#endif
 	.call = cmd_yara_call,
 	.init = cmd_yara_init,
 	.fini = cmd_yara_fini
