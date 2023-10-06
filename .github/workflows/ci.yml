@@ -22,7 +22,7 @@ jobs:
         sudo dpkg -i radare2_5.8.4_amd64.deb
         sudo dpkg -i radare2-dev_5.8.4_amd64.deb
     - name: Installing yara via r2pm
-      run: r2pm -i yara
+      run: r2pm -Ui yara
     - name: Building r2yara
       run: r2pm -r ./configure && r2pm -r make -j && sudo make install
     - name: Packaging
@@ -43,7 +43,7 @@ jobs:
         sudo dpkg -i radare2_5.8.4_amd64.deb
         sudo dpkg -i radare2-dev_5.8.4_amd64.deb
     - name: Installing yara via r2pm
-      run: r2pm -ci r2yara
+      run: r2pm -Uci r2yara
   build-macos:
     runs-on: macos-11
 #   runs-on: macos-12
@@ -54,7 +54,7 @@ jobs:
     - name: Building Radare2
       run: ( git clone --depth=1 https://github.com/radareorg/radare2 && cd radare2 && export CFLAGS=-O0 && ./configure && make -j && sudo make install )
     - name: Installing yara via r2pm
-      run: r2pm -i yara
+      run: r2pm -Ui yara
     - name: Building r2yara
       run: r2pm -r ./configure && r2pm -r make -j && make user-install
 #    - name: Packaging
