@@ -18,7 +18,7 @@ RULESDIR=$(R2PM_USRPLUGIN_DIR)/rules-yara3
 user-install install:
 	${INSTALL_LIB} ${MOD}.${LIBEXT} $(R2PM_USRPLUGIN_DIR)/${MOD}.${LIBEXT}
 	mkdir -p $(RULESDIR)
-	cp -rf *.gz $(RULESDIR)
+	cp -rf ../rules/*.yara $(RULESDIR)
 
 symstall:
 	ln -fs ${PWD}/${MOD}.${LIBEXT} $(R2PM_USRPLUGIN_DIR)/$(MOD).$(LIBEXT)
