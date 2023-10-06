@@ -134,15 +134,6 @@ jobs:
           asset_path: dist/artifacts/build-linux/r2yara_${{ steps.r2fv.outputs.branch }}_amd64.deb
           asset_name: r2yara_${{ steps.r2fv.outputs.branch }}_amd64.deb
           asset_content_type: application/vnd.debian.binary-package
-      - name: Upload precompiled agent script
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/artifacts/build-agent/_agent.js
-          asset_name: _agent.js
-          asset_content_type: application/javascript
       - name: Upload asset for macOS
         uses: actions/upload-release-asset@v1
         env:
@@ -152,12 +143,3 @@ jobs:
           asset_path: dist/artifacts/build-macos/r2yara-${{ steps.r2fv.outputs.branch }}-x64.pkg
           asset_name: r2yara-${{ steps.r2fv.outputs.branch }}-x64.pkg
           asset_content_type: application/octet-stream
-      - name: Upload asset for Windows (w64)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/artifacts/build-windows/r2yara-${{env.R2V}}-w64.zip
-          asset_name: r2yara-${{ steps.r2fv.outputs.branch }}-w64.zip
-          asset_content_type: application/zip
