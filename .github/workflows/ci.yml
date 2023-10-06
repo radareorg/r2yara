@@ -61,8 +61,7 @@ jobs:
       run: brew install pkg-config
     - name: Building Radare2 from git
       run: |
-        brew install automake
-        autoremake -i
+        brew install automake autoconf
         export CFLAGS=-O0
         git clone --depth=1 https://github.com/radareorg/radare2 && cd radare2
         ./configure
