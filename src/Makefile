@@ -1,5 +1,7 @@
 include ../config.mk
 
+CFLAGS+=-g
+
 MOD=core_yara
 
 all: $(MOD).$(LIBEXT)

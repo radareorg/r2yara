@@ -503,8 +503,8 @@ static int cmd_yara_call(void *user, const char *input) {
 static int cmd_yara_load_default_rules(const RCore* core) {
 	RListIter* iter = NULL;
 	YR_COMPILER* compiler = NULL;
-	YR_RULES* yr_rules;
-	char* filename, *complete_path;
+	YR_RULES* yr_rules = NULL;
+	char* filename;
 	char* rules = NULL;
 #if R2_VERSION_NUMBER < 50709
 	char* y3_rule_dir = r_str_newf ("%s%s%s", r_str_home (R2_HOME_PLUGINS), R_SYS_DIR, "rules-yara3");
@@ -521,15 +521,25 @@ static int cmd_yara_load_default_rules(const RCore* core) {
 	yr_compiler_set_callback (compiler, compiler_callback, NULL);
 
 	r_list_foreach (list, iter, filename) {
-		if (filename[0] != '.') { // skip '.', '..' and hidden files
-			complete_path = r_str_newf ("%s%s%s", y3_rule_dir, R_SYS_DIR, filename);
-			rules = (char*)r_file_gzslurp (complete_path, NULL, true);
-			R_FREE (complete_path);
-			if (yr_compiler_add_string (compiler, rules, NULL) > 0) {
+		if (filename[0] == '.') {
+			// skip '.', '..' and hidden files
+			continue;
+		}
+		char *rulepath = r_str_newf ("%s%s%s", y3_rule_dir, R_SYS_DIR, filename);
+		if (r_str_endswith (filename, ".gz")) {
+			rules = (char*)r_file_gzslurp (rulepath, NULL, true);
+		} else {
+			rules = (char*)r_file_slurp (rulepath, NULL);
+		}
+		if (rules != NULL) {
+			if (yr_compiler_add_string (compiler, rules, rulepath) > 0) {
 				logerr (compiler, NULL);
 			}
 			R_FREE (rules);
+		} else {
+			R_LOG_ERROR ("cannot load %s", rulepath);
 		}
+		free (rulepath);
 	}
 	r_list_free (list);
 
