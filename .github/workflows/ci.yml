@@ -13,7 +13,6 @@ on:
 jobs:
   build-linux20:
     runs-on: ubuntu-20.04
-    continue-on-error: true
     steps:
     - uses: actions/checkout@v3
     - name: Installing radare2
@@ -22,8 +21,10 @@ jobs:
         wget https://github.com/radareorg/radare2/releases/download/5.8.4/radare2-dev_5.8.4_amd64.deb
         sudo dpkg -i radare2_5.8.4_amd64.deb
         sudo dpkg -i radare2-dev_5.8.4_amd64.deb
+    - name: Installing yara via r2pm
+      run: r2pm -i yara
     - name: Building r2yara
-      run: ./configure && make -j && sudo make install
+      run: r2pm -r ./configure && r2pm -r make -j && sudo make install
     - name: Packaging
       run: make -C dist/debian
     - name: Pub
@@ -31,6 +32,18 @@ jobs:
       with:
         name: build-linux
         path: dist/debian/*.deb
+  build-linux22:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Installing radare2
+      run: |
+        wget https://github.com/radareorg/radare2/releases/download/5.8.4/radare2_5.8.4_amd64.deb
+        wget https://github.com/radareorg/radare2/releases/download/5.8.4/radare2-dev_5.8.4_amd64.deb
+        sudo dpkg -i radare2_5.8.4_amd64.deb
+        sudo dpkg -i radare2-dev_5.8.4_amd64.deb
+    - name: Installing yara via r2pm
+      run: r2pm -ci r2yara
   build-macos:
     runs-on: macos-11
 #   runs-on: macos-12
@@ -40,8 +53,10 @@ jobs:
       run: brew install pkg-config
     - name: Building Radare2
       run: ( git clone --depth=1 https://github.com/radareorg/radare2 && cd radare2 && export CFLAGS=-O0 && ./configure && make -j && sudo make install )
+    - name: Installing yara via r2pm
+      run: r2pm -i yara
     - name: Building r2yara
-      run: ./configure && make -j && make user-install
+      run: r2pm -r ./configure && r2pm -r make -j && make user-install
 #    - name: Packaging
 #      run: make -C dist/macos
 #    - name: Pub
