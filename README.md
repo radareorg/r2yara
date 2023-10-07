@@ -1,4 +1,5 @@
 # r2yara
+[![GithubCI Status](https://github.com/radareorg/r2yara/workflows/CI/badge.svg?branch=master)](https://github.com/radareorg/radare2-extras/actions?query=workflow%3A%22ci%22)|
 
 r2 and yara, better together!
 
@@ -14,4 +15,4 @@ After running this command:
 r2pm -ci r2yara
 ```
 
-You will get the `yr` command inside `radare2`` shell
+You will get the `yr` command inside `radare2` shell

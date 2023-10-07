@@ -1,6 +1,20 @@
+NAME=yara: tags
+FILE=malloc://1024
+CMDS=<<EOF
+yrt
+EOF
+EXPECT=<<EOF
+[YARA tags]
+crypto
+foo
+EOF
+RUN
+
 NAME=yara scan
 FILE=bins/elf/vim
 CMDS=<<EOF
+yr-
+yr ../rules/crypto.yara
 yrs
 f
 EOF

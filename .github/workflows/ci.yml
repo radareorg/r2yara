@@ -1,4 +1,4 @@
-# TODO: add windows and run the testsuite
+# TODO: add windows
 name: ci
 
 env:
@@ -41,17 +41,12 @@ jobs:
     - uses: actions/checkout@v3
     - name: Installing radare2
       run: |
-        wget https://github.com/radareorg/radare2/releases/download/5.8.8/radare2_5.8.8_amd64.deb
-        wget https://github.com/radareorg/radare2/releases/download/5.8.8/radare2-dev_5.8.8_amd64.deb
-        sudo dpkg -i radare2_5.8.8_amd64.deb
-        sudo dpkg -i radare2-dev_5.8.8_amd64.deb
-    - name: Installing yara via r2pm
-      run: r2pm -Ui r2yara
-    - name: Building r2yara
-      run: |
-        r2pm -r ./configure
-        r2pm -r make -j
-        make user-install
+        git clone --depth=1 https://github.com/radareorg/radare2 && cd radare2
+        sys/install.sh
+    - name: Installing yara and r2yara via r2pm
+      run: r2pm -Uci r2yara
+    - name: Running Testsuite
+      run: make -C test
   build-macos:
     runs-on: macos-11
 #   runs-on: macos-12   # maybe this version have aclocal
