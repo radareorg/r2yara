@@ -1,5 +1,5 @@
 # r2yara
-[![GithubCI Status](https://github.com/radareorg/r2yara/workflows/CI/badge.svg?branch=master)](https://github.com/radareorg/radare2-extras/actions?query=workflow%3A%22ci%22)|
+[![GithubCI Status](https://github.com/radareorg/radare2/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/radareorg/r2yara/actions/workflows/ci.yml?query=branch%3Amain)
 
 r2 and yara, better together!
 
