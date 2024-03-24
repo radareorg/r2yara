@@ -1,4 +1,4 @@
-/* radare - LGPLv3 - Copyright 2014-2023 - pancake, jvoisin, jfrankowski */
+/* radare - LGPLv3 - Copyright 2014-2024 - pancake, jvoisin, jfrankowski */
 
 #include <r_core.h>
 #include <yara.h>
@@ -37,6 +37,7 @@ static int cmd_yara_help(const RCore* core);
 static int cmd_yara_process(const RCore* core, const char* input);
 static int cmd_yara_scan(const RCore* core, const char* option);
 static int cmd_yara_load_default_rules(const RCore* core);
+static int cmd_yara_version();
 
 static const char yara_rule_template[] = "rule RULE_NAME {\n  strings:\n\n  condition:\n}";
 
@@ -395,6 +396,13 @@ err_exit:
 	return false;
 }
 
+static int cmd_yara_version() {
+	r_cons_printf ("r2 %s\n", R2_VERSION);
+	r_cons_printf ("yara %s\n", YR_VERSION);
+	r_cons_printf ("r2yara %s\n", R2Y_VERSION);
+	return 0;
+}
+
 const char *short_help_message[] = {
 	"Usage: yr", "[action] [args..]", " load and run yara rules inside r2",
 	"yr", " [file]", "add yara rules from file",
@@ -444,12 +452,9 @@ static int cmd_yara_process(const RCore* core, const char* input) {
 	} else if (r_str_startswith (inp, "tags")) {
 		res = cmd_yara_tags ();
 	} else if (r_str_startswith (input, "tag ")) {
-        	res = cmd_yara_tag (arg);
+		res = cmd_yara_tag (arg);
 	} else if (r_str_startswith (input, "ver")) {
-		r_cons_printf ("r2 %s\n", R2_VERSION);
-		r_cons_printf ("yara %s\n", YR_VERSION);
-		r_cons_printf ("r2yara %s\n", R2Y_VERSION);
-		res = 0;
+		res = cmd_yara_version ();
 	} else {
 		r_core_cmd_help (core, long_help_message);
 	}
@@ -485,6 +490,9 @@ static int cmd_yr(RCore *core, const char *input) {
 		} else {
 			cmd_yara_tags ();
 		}
+		break;
+	case 'v': // "yrv"
+		res = cmd_yara_version ();
 		break;
 	case 0:
 		cmd_yara_list ();
