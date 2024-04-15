@@ -73,7 +73,7 @@ static int callback (int message, void *msg_data, void *user_data) {
 					}
 				}
 
-				r_strf_var (flag, 256, "%s%d_%s_%d", "yara", flagidx, rule->identifier, ruleidx);
+				r_strf_var (flag, 256, "%s%d.%s_%d", "yara", flagidx, rule->identifier, ruleidx);
 				if (print_strings) {
 					r_cons_printf ("0x%08" PFMT64x ": %s : ", n + offset, flag);
 					r_print_bytes (print, match->data, match->data_length, "%02x");
@@ -94,7 +94,7 @@ static void compiler_callback(int error_level, const char* file_name,
 	return;
 }
 #else
-static int callback (YR_SCAN_CONTEXT* context, int message, void *msg_data, void *user_data) {
+static int callback(YR_SCAN_CONTEXT* context, int message, void *msg_data, void *user_data) {
 	RCore *core = (RCore *) user_data;
 	RPrint *print = core->print;
 	unsigned int ruleidx;
@@ -119,7 +119,7 @@ static int callback (YR_SCAN_CONTEXT* context, int message, void *msg_data, void
 					}
 				}
 
-				r_strf_var (flag, 256, "%s%d_%s_%d", "yara", flagidx, rule->identifier, ruleidx);
+				r_strf_var (flag, 256, "%s%d.%s_%d", "yara", flagidx, rule->identifier, ruleidx);
 				if (print_strings) {
 					r_cons_printf ("0x%08" PFMT64x ": %s : ", n + offset, flag);
 					r_print_bytes (print, match->data, match->data_length, "%02x");
@@ -145,7 +145,6 @@ static void compiler_callback(int error_level, const char* file_name,
 static int cmd_yara_scan(const RCore* core, R_NULLABLE const char* option) {
 	RListIter* rules_it;
 	YR_RULES* rules;
-	void* to_scan;
 
 	r_flag_space_push (core->flags, "yara");
 	const unsigned int to_scan_size = r_io_size (core->io);
@@ -156,19 +155,17 @@ static int cmd_yara_scan(const RCore* core, R_NULLABLE const char* option) {
 		return false;
 	}
 
+	print_strings = true;
 	if (option != NULL) {
-		if (*option == '\0') {
+		if (*option == 'q') {
 			print_strings = false;
-		} else if (*option == 'S') {
-			print_strings = true;
 		} else {
-			print_strings = false;
 			R_LOG_ERROR ("Invalid option");
 			return false;
 		}
 	}
 
-	to_scan = malloc (to_scan_size);
+	void* to_scan = malloc (to_scan_size);
 	if (!to_scan) {
 		R_LOG_ERROR ("Something went wrong during memory allocation");
 		return false;
@@ -409,7 +406,7 @@ const char *short_help_message[] = {
 	"yr", "-*", "unload all the rules",
 	"yr", "?", "show this help (same as 'yara?')",
 	"yr", "", "list loaded rules",
-	"yr", "s[S]", "scan the current file, if S option is given it prints matching strings",
+	"yrs", "[q]", "scan the current file, suffix with 'q' for quiet mode",
 	"yr", "t", "list tags from the loaded rules",
 	"yr", "t [tagname]", "list rules with given tag",
 	"yr", "v", "show version information about r2yara and yara",
@@ -444,7 +441,7 @@ static int cmd_yara_process(const RCore* core, const char* input) {
 	} else if (r_str_startswith (inp, "list")) {
 		res = cmd_yara_list ();
 	} else if (r_str_startswith (inp, "scanS") || r_str_startswith (inp, "scan S")) {
-		res = cmd_yara_scan (core, "S");
+		res = cmd_yara_scan (core, "q");
 	} else if (r_str_startswith (inp, "scan")) {
 		res = cmd_yara_scan (core, arg);
 	} else if (r_str_startswith (inp, "show")) {
@@ -475,7 +472,11 @@ static int cmd_yr(RCore *core, const char *input) {
 		break;
 	case '/': // "yr/" <- imho makes more sense
 	case 's': // "yrs"
-		res = cmd_yara_scan (core, arg);
+		if (input[1] == 'q') {
+			res = cmd_yara_scan (core, "q");
+		} else {
+			res = cmd_yara_scan (core, arg);
+		}
 		break;
 	case '+':
 	case ' ':
