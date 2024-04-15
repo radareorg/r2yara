@@ -3,6 +3,7 @@ include ../config.mk
 CFLAGS+=-g
 
 MOD=core_yara
+MKDIR=mkdir -p
 RULESDIR=rules-yara3
 
 all: $(MOD).$(LIBEXT)
@@ -18,8 +19,10 @@ mrproper: clean
 
 install:
 	${INSTALL_LIB} ${MOD}.${LIBEXT} $(R2_LIBR_PLUGINS_DIR)/${MOD}.${LIBEXT}
-	mkdir -p $(R2_LIBR_PLUGINS_DIR)/$(RULESDIR)
+	$(MKDIR) $(R2_LIBR_PLUGINS_DIR)/$(RULESDIR)
 	cp -f ../rules/*.yara $(R2_LIBR_PLUGINS_DIR)/$(RULESDIR)/
+	$(MKDIR) $(MANDIR)/man7
+	cp -f ../doc/r2yara.7 $(MANDIR)/man7/r2yara.7
 
 user-install:
 	${INSTALL_LIB} ${MOD}.${LIBEXT} $(R2PM_USRPLUGIN_DIR)/${MOD}.${LIBEXT}
@@ -30,10 +33,13 @@ symstall:
 	ln -fs ${PWD}/${MOD}.${LIBEXT} $(R2PM_USRPLUGIN_DIR)/$(MOD).$(LIBEXT)
 	mkdir -p $(R2PM_USRPLUGIN_DIR)/$(RULESDIR)
 	for a in *.gz ; do ln -fs $(PWD)/$$a $(R2PM_USRPLUGIN_DIR)/$(RULESDIR)/$$a ; done
+	$(MKDIR) $(MANDIR)/man7
+	ln -fs $(shell pwd)/../doc/r2yara.7 $(MANDIR)/man7/r2yara.7
 
 uninstall:
 	rm -f ${R2_LIBR_PLUGINS_DIR}/$(MOD).$(LIBEXT)
 	rm -rf $(R2_LIBR_PLUGINS_DIR)/$(RULESDIR)
+	rm -f $(MANDIR)/man7/r2yara.7
 
 user-uninstall:
 	rm -f ${R2PM_USRPLUGIN_DIR}/$(MOD).$(LIBEXT)
