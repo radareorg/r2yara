@@ -2,7 +2,7 @@
 name: ci
 
 env:
-  R2V: 5.8.8
+  R2V: 5.9.0
 
 on:
   push:
@@ -18,10 +18,10 @@ jobs:
     - uses: actions/checkout@v3
     - name: Installing radare2
       run: |
-        wget https://github.com/radareorg/radare2/releases/download/5.8.8/radare2_5.8.8_amd64.deb
-        wget https://github.com/radareorg/radare2/releases/download/5.8.8/radare2-dev_5.8.8_amd64.deb
-        sudo dpkg -i radare2_5.8.8_amd64.deb
-        sudo dpkg -i radare2-dev_5.8.8_amd64.deb
+        wget https://github.com/radareorg/radare2/releases/download/5.9.0/radare2_5.9.0_amd64.deb
+        wget https://github.com/radareorg/radare2/releases/download/5.9.0/radare2-dev_5.9.0_amd64.deb
+        sudo dpkg -i radare2_5.9.0_amd64.deb
+        sudo dpkg -i radare2-dev_5.9.0_amd64.deb
     - name: Installing yara via r2pm
       run: r2pm -Ui yara
     - name: Building r2yara
