@@ -79,7 +79,7 @@ jobs:
 #        path: dist/macos/r2yara-*.pkg
 
   check_release:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     outputs:
       is_release: ${{ steps.release.outputs.is }}
       tag_name: ${{ steps.release.outputs.tag }}
@@ -97,7 +97,7 @@ jobs:
         run: git describe --exact-match --tags ${{ github.sha }} | awk 'BEGIN{tag="-";r="no"}/^[0-9]+\.[0-9]+/{tag=$0;r="yes"};END{print "::set-output name=is::"r;print "::set-output name=tag::"tag}'
         id: release
   release:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.check_release.outputs.is_release == 'yes' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.check_release.outputs.is_release == 'yes' }}
     needs:
       - check_release
     runs-on: ubuntu-latest
