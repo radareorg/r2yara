@@ -3,9 +3,9 @@
 
 r2 and yara, better together!
 
-## License and Author
+## License and Author(s)
 
-LGPLv3 - Copyright 2014-2023 - pancake, jvoisin, jfrankowski
+LGPLv3 - Copyright 2014-2024 - pancake, jvoisin, jfrankowski, Sylvain Pelissier
 
 ## Installation
 
