@@ -1,0 +1,91 @@
+.Dd Apr 15, 2024
+.Dt R2YARA 7
+.Sh NAME
+.Nm r2yara
+.Nd Yara plugin for radare2
+.Sh SYNOPSIS
+.Nm yr
+.Op Fl stv?-*
+.Op [args] ...
+.Sh DESCRIPTION
+This is a plugin for radare2, not available as a shell command.
+.Pp
+Yara is a pattern matching rule scanner tool that is widely used by the malware analysis community.
+This plugin is available via r2pm `r2pm -ci r2yara` and it doesn't depend on any yara system installation because it will build and statically link it.
+.Pp
+r2yara is a plugin for radare2 that adds the 'yr' command.
+.Sh SUBCOMMANDS
+.Bl -tag -width Fl
+.It Fl yr Ar [file]
+List loaded rules or load a new one if a file is passed as argument
+.It Fl yrs
+Scan in current memory for loaded rules
+.It Fl yrt
+List loaded yara tags
+.It Fl yrv
+Show version information
+.Sh YARA RULES
+.Pp
+This is a sample yara rule
+.Pp
+  rule HelloWorld : foo {
+    meta:
+      author = "pancake"
+      description = "hello world"
+      date = "2023-10"
+      version = "0.1"
+    strings:
+      $ = "lib"
+    condition:
+      all of them
+  }
+.Pp
+.Sh USAGE
+Available variable types are:
+.Pp
+  [0x00000000]> yr?
+  Usage: yr [action] [args..]   load and run yara rules inside r2
+  | yr [file]      add yara rules from file
+  | yr-*           unload all the rules
+  | yr?            show this help (same as 'yara?')
+  | yr             list loaded rules
+  | yrs[S]         scan the current file, if S option is given it prints matching strings
+  | yrt            list tags from the loaded rules
+  | yrt [tagname]  list rules with given tag
+  | yrv            show version information about r2yara and yara
+  [0x00000000]> q
+.Pp
+.Sh EXAMPLES
+Some usage examples:
+.Pp
+  $ radare2 /bin/ls
+  > yr hello.yara   # load this rule
+  > yrs             # scan for all the loaded rules
+  HelloWorld
+  0x000045f9: yara0.HelloWorld_0 : 6c6962
+  0x00004685: yara0.HelloWorld_1 : 6c6962
+  0x00004689: yara0.HelloWorld_2 : 6c6962
+  0x00004693: yara0.HelloWorld_3 : 6c6962
+  0x000046b5: yara0.HelloWorld_4 : 6c6962
+  0x000046b9: yara0.HelloWorld_5 : 6c6962
+  0x000046ca: yara0.HelloWorld_6 : 6c6962
+  0x000046ed: yara0.HelloWorld_7 : 6c6962
+  0x000046f1: yara0.HelloWorld_8 : 6c6962
+  0x000046ff: yara0.HelloWorld_9 : 6c6962
+.Pp
+Show version information of r2, yara and r2yara:
+.Pp
+  [0x100003a84]> yrv
+  r2 5.9.1
+  yara 4.5.0
+  r2yara 1.2.0
+.Pp
+.Sh SEE ALSO
+.Pp
+.Xr radare2(1)
+.Sh WWW
+.Pp
+https://www.radare.org
+.Sh AUTHORS
+.Pp
+Written by pancake <pancake@nopcode.org>.
