@@ -2,6 +2,7 @@
 
 #include <r_core.h>
 #include <yara.h>
+#include "config.h"
 
 #if R2_VERSION_NUMBER < 50809
 static inline char *r_str_after(char *s, char c) {
@@ -595,7 +596,7 @@ static int cmd_yara_init(void *user, const char *cmd) {
 	return true;
 }
 
-static int cmd_yara_fini() {
+static int cmd_yara_fini(void *user, const char *cmd) {
 	if (initialized) {
 		r_list_free (rules_list);
 		yr_finalize ();
@@ -609,13 +610,13 @@ RCorePlugin r_core_plugin_yara = {
 	.name = "yara",
 	.desc = "YARA integration",
 	.license = "LGPL",
-	.version = "0.1.2",
+	.version = R2Y_VERSION,
 #else
 	.meta = {
 		.name = "yara",
 		.desc = "YARA integration",
 		.license = "LGPL",
-		.version = "0.1.2",
+		.version = R2Y_VERSION,
 	},
 #endif
 	.call = cmd_yara_call,
