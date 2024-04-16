@@ -2,7 +2,6 @@
 
 #include <r_core.h>
 #include <yara.h>
-#include "config.h"
 
 #if R2_VERSION_NUMBER < 50809
 static inline char *r_str_after(char *s, char c) {
