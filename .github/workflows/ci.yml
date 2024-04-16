@@ -33,7 +33,8 @@ jobs:
       run: |
         sudo apt install meson
         r2pm -ci ninja
-        meson b && r2pm -r ninja -C b
+        r2pm -r meson b
+        r2pm -r ninja -C b
     - name: Packaging
       run: make -C dist/debian
     - name: Pub
