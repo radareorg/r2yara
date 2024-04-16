@@ -2,7 +2,6 @@
 
 #include <r_core.h>
 #include <yara.h>
-#include "config.h"
 
 #if R2_VERSION_NUMBER < 50809
 static inline char *r_str_after(char *s, char c) {
@@ -34,7 +33,6 @@ static int cmd_yara_add_file(const char* rules_path);
 static int cmd_yara_call(void *user, const char *input);
 static int cmd_yara_clear();
 static int cmd_yara_init(void *user, const char *cmd);
-static int cmd_yara_help(const RCore* core);
 static int cmd_yara_process(const RCore* core, const char* input);
 static int cmd_yara_scan(const RCore* core, const char* option);
 static int cmd_yara_load_default_rules(const RCore* core);

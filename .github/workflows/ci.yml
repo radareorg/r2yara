@@ -24,6 +24,12 @@ jobs:
         sudo dpkg -i "radare2-dev_${R2V}_amd64.deb"
     - name: Installing yara via r2pm
       run: r2pm -Ui yara
+    - name: Building with meson
+      run: |
+        sudo apt install meson
+        r2pm -ci ninja
+        r2pm -r meson b
+        r2pm -r ninja -C b
     - name: Building r2yara
       run: |
         r2pm -r ./configure
@@ -46,8 +52,10 @@ jobs:
         sys/install.sh
     - name: Installing yara and r2yara via r2pm
       run: r2pm -Uci r2yara
+    - name: Testing r2yara installation
+      run: R2_DEBUG=1 r2 -qcq -c 'yrv' --
     - name: Running Testsuite
-      run: make -C test
+      run: r2pm -r make -C test
   build-macos:
     runs-on: macos-11
 #   runs-on: macos-12   # maybe this version have aclocal

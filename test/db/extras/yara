@@ -12,6 +12,7 @@ RUN
 
 NAME=yara scan
 FILE=bins/elf/vim
+ARGS=-n
 CMDS=<<EOF
 yr-
 yr ../rules/crypto.yara
