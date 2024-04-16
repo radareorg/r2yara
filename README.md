@@ -15,4 +15,33 @@ After running this command:
 r2pm -ci r2yara
 ```
 
+## Documentation
+
+See `man 7 r2yara` for some examples.
+
 You will get the `yr` command inside `radare2` shell
+
+```
+[0x00000000]> yr?
+Usage: yr [action] [args..]   load and run yara rules inside r2
+| yr [file]      add yara rules from file
+| yr-*           unload all the rules
+| yr?            show this help (same as 'yara?')
+| yr             list loaded rules
+| yrs[S]         scan the current file, if S option is given it prints matching strings
+| yrt            list tags from the loaded rules
+| yrt [tagname]  list rules with given tag
+| yrv            show version information about r2yara and yara
+[0x00000000]> q
+```
+
+Run it like this:
+
+```
+$ radare2 /bin/ls
+> yr hello.yara   # load this rule
+> yrs             # scan for all the loaded rules
+HelloWorld
+0x000045f9: yara0.HelloWorld_0 : 6c6962
+0x00004685: yara0.HelloWorld_1 : 6c6962
+```
