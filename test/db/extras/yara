@@ -38,7 +38,7 @@ NAME=yara: scan with strings
 FILE=malloc://1024
 CMDS=<<EOF
 wx cffbc0b5e9b5dba5a5dbb5e9d728ae2222ae28d7
-yrs S
+yrs
 EOF
 EXPECT=<<EOF
 SHA512_Constants
