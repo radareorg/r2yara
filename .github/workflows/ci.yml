@@ -30,7 +30,9 @@ jobs:
         r2pm -r make -j
         make user-install
     - name: Building with meson
-      run: r2pm -ci meson ninja && r2pm -r meson b && ninja -C b
+      run: |
+        apt install meson
+        r2pm -ci ninja && r2pm -r meson b && r2pm -r ninja -C b
     - name: Packaging
       run: make -C dist/debian
     - name: Pub
