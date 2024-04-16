@@ -2,7 +2,7 @@ include ../config.mk
 
 CFLAGS+=-g
 
-MOD=core_yara
+MOD=core_r2yara
 MKDIR=mkdir -p
 RULESDIR=rules-yara3
 

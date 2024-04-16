@@ -24,7 +24,7 @@ all: root
 root:
 	cd ../.. && $(MAKE) clean ; ./configure --prefix=/usr $(R2CFG_FLAGS) ; make
 	mkdir -p root/$(R2PLUGDIR)
-	cp -f ../../src/core_yara.so root/$(R2PLUGDIR)
+	cp -f ../../src/core_r2yara.so root/$(R2PLUGDIR)
 
 purge: clean
 	rm -rf root
