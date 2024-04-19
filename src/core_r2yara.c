@@ -387,6 +387,7 @@ static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
 		if (input) {
 			int len = r_num_math (r2yara->core->num, input + 1);
 			char *s = r_core_cmd_strf (r2yara->core, "pcY %d", len);
+			r_str_trim (s);
 			r_list_append (r2yara->genstrings, s);
 		} else {
 			char *s = r_core_cmd_str (r2yara->core, "pcY");
