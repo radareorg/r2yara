@@ -24,14 +24,16 @@ You will get the `yr` command inside `radare2` shell
 ```
 [0x00000000]> yr?
 Usage: yr [action] [args..]   load and run yara rules inside r2
-| yr [file]      add yara rules from file
-| yr-*           unload all the rules
-| yr?            show this help (same as 'yara?')
-| yr             list loaded rules
-| yrs[S]         scan the current file, if S option is given it prints matching strings
-| yrt            list tags from the loaded rules
-| yrt [tagname]  list rules with given tag
-| yrv            show version information about r2yara and yara
+| yr [file]        add yara rules from file
+| yr               same as yr?
+| yr-*             unload all the rules
+| yr?              show this help (same as 'yara?')
+| yrg-[*]          delete last strings/bytes from generated rule or all of them (yr-*)
+| yrg[-sx]         generate yara rule, add (s)tring or (x)bytes, or (-)pop (-*) delete all
+| yrl              list loaded rules
+| yrs[q]           scan the current file, suffix with 'q' for quiet mode
+| yrt ([tagname])  list tags from loaded rules, or list rules from given tag
+| yrv              show version information about r2yara and yara
 [0x00000000]> q
 ```
 
