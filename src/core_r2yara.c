@@ -15,13 +15,13 @@ static inline char *r_str_after(char *s, char c) {
 	return NULL;
 }
 #endif
-
 typedef struct {
 	bool initialized;
 	bool print_strings;
 	unsigned int flagidx;
 	bool iova; // true
 	RList* rules_list;
+	RList *genstrings;
 	RCore *core;
 } R2Yara;
 
@@ -325,6 +325,79 @@ err_exit:
 	return false;
 }
 
+static void cmd_yara_gen_show(R2Yara *r2yara, int format) {
+	RConfig *cfg = r2yara->core->config;
+	const char *name = r_config_get (cfg, "yara.rule");
+	const char *tags = r_config_get (cfg, "yara.tags");
+	const char *auth = r_config_get (cfg, "yara.author");
+	const char *desc = r_config_get (cfg, "yara.description");
+	const char *date = r_config_get (cfg, "yara.date");
+	const char *vers = r_config_get (cfg, "yara.version");
+	const int amount = r_config_get_i (cfg, "yara.amount");
+	r_cons_printf ("rule %s : %s {\n", name, tags);
+	r_cons_printf ("  meta:\n");
+	r_cons_printf ("    author = \"%s\"\n", auth);
+	r_cons_printf ("    description = \"%s\"\n", desc);
+	r_cons_printf ("    date = \"%s\"\n", date);
+	r_cons_printf ("    version = \"%s\"\n", vers);
+	if (r_list_empty (r2yara->genstrings)) {
+		R_LOG_WARN ("Use 'yrg[sx..] subcommands to register strings, bytes to the current rule");
+	} else {
+		r_cons_printf ("  strings:\n");
+		RListIter *iter;
+		const char *s;
+		r_list_foreach (r2yara->genstrings, iter, s) {
+			r_cons_printf ("    $ = %s\n", s);
+		}
+		r_cons_printf ("  condition:\n");
+		if (amount > 1) {
+			r_cons_printf ("    %d of them\n", amount);
+		} else {
+			r_cons_printf ("    all of them\n");
+		}
+	}
+	r_cons_printf ("}\n");
+}
+
+static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
+	const char arg0 = input? *input: 0;
+	switch (arg0) {
+	case 0:
+		cmd_yara_gen_show (r2yara, 0);
+		break;
+	case 's':
+		{
+			char *s = r_core_cmd_str (r2yara->core, "psz");
+			r_str_trim (s);
+			char *ss = r_str_newf ("\"%s\"", s);
+			r_list_append (r2yara->genstrings, ss);
+			free (s);
+		}
+		break;
+	case '-':
+		if (input && input[1] == '*') {
+			r_list_free (r2yara->genstrings);
+			r2yara->genstrings = r_list_newf (free);
+		} else {
+			char *s = r_list_pop (r2yara->genstrings);
+			free (s);
+		}
+		break;
+	case 'x':
+		if (input) {
+			int len = r_num_math (r2yara->core->num, input + 1);
+			char *s = r_core_cmd_strf (r2yara->core, "pcY %d", len);
+			r_list_append (r2yara->genstrings, s);
+		} else {
+			char *s = r_core_cmd_str (r2yara->core, "pcY");
+			r_str_trim (s);
+			r_list_append (r2yara->genstrings, s);
+		}
+		break;
+	}
+	return 0;
+}
+
 static int cmd_yara_add(R2Yara *r2yara, const char* input) {
 	if (!input) {
 		R_LOG_ERROR ("Missing argument");
@@ -393,14 +466,15 @@ static int cmd_yara_version(R2Yara *r2yara) {
 const char *short_help_message[] = {
 	"Usage: yr", "[action] [args..]", " load and run yara rules inside r2",
 	"yr", " [file]", "add yara rules from file",
+	"yr", "", "same as yr?",
 	"yr", "-*", "unload all the rules",
 	"yr", "?", "show this help (same as 'yara?')",
-	"yr", "", "same as yr?",
-	"yr", "l", "list loaded rules",
+	"yrg", "-[*]", "delete last strings/bytes from generated rule or all of them (yr-*)",
+	"yrg", "[-sx]", "generate yara rule, add (s)tring or (x)bytes, or (-)pop (-*) delete all",
+	"yrl", "", "list loaded rules",
 	"yrs", "[q]", "scan the current file, suffix with 'q' for quiet mode",
-	"yr", "t", "list tags from the loaded rules",
-	"yr", "t [tagname]", "list rules with given tag",
-	"yr", "v", "show version information about r2yara and yara",
+	"yrt", " ([tagname])", "list tags from loaded rules, or list rules from given tag",
+	"yrv", "", "show version information about r2yara and yara",
 	NULL
 };
 
@@ -472,6 +546,9 @@ static int cmd_yr(R2Yara *r2yara, const char *input) {
 		} else {
 			res = cmd_yara_scan (r2yara, arg);
 		}
+		break;
+	case 'g':
+		cmd_yara_gen (r2yara, input + 1);
 		break;
 	case '+':
 	case ' ':
@@ -586,6 +663,7 @@ static void setup_config(R2Yara *r2yara) {
 	r_config_set (cfg, "yara.version", "0.1");
 	r_config_set (cfg, "yara.rule", "rulename");
 	r_config_set (cfg, "yara.tags", "test");
+	r_config_set_i (cfg, "yara.amount", 0);
 	r_config_lock (cfg, true);
 }
 
@@ -598,6 +676,7 @@ static int cmd_yara_init(void *user, const char *cmd) {
 	r2yara->iova = true;
 	r2yara->core = core;
 	r2yara->rules_list = r_list_newf ((RListFree) yr_rules_destroy);
+	r2yara->genstrings = r_list_newf (free);
 
 	yr_initialize ();
 	setup_config (r2yara);
@@ -635,6 +714,7 @@ static int cmd_yara_fini(void *user, const char *cmd) {
 	R2Yara *r2yara = &Gr2yara;
 	if (r2yara->initialized) {
 		r_list_free (r2yara->rules_list);
+		r_list_free (r2yara->genstrings);
 		yr_finalize ();
 		r2yara->initialized = false;
 	}
