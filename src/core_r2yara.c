@@ -80,7 +80,7 @@ static int callback(int message, void *msg_data, void *user_data) {
 static void compiler_callback(int error_level, const char* file_name,
 		int line_number, const char* message, void* user_data) {
 	// TODO depending on error_level. use R_LOG_WARN, ERROR or INFO
-	eprintf ("file: %s line_number: %d.\n%s", file_name, line_number, message);
+	R_LOG_INFO ("file: %s line_number: %d: %s", file_name, line_number, message);
 	return;
 }
 #else
@@ -126,7 +126,7 @@ static int callback(YR_SCAN_CONTEXT* context, int message, void *msg_data, void 
 static void compiler_callback(int error_level, const char* file_name,
 		int line_number, const struct YR_RULE *rule, const char* message, void* user_data) {
 	// TODO depending on error_level. use R_LOG_WARN, ERROR or INFO
-	eprintf ("file: %s line_number: %d.\n%s", file_name, line_number, message);
+	R_LOG_INFO ("file: %s line_number: %d %s", file_name, line_number, message);
 	return;
 }
 #endif
@@ -395,7 +395,8 @@ const char *short_help_message[] = {
 	"yr", " [file]", "add yara rules from file",
 	"yr", "-*", "unload all the rules",
 	"yr", "?", "show this help (same as 'yara?')",
-	"yr", "", "list loaded rules",
+	"yr", "", "same as yr?",
+	"yr", "l", "list loaded rules",
 	"yrs", "[q]", "scan the current file, suffix with 'q' for quiet mode",
 	"yr", "t", "list tags from the loaded rules",
 	"yr", "t [tagname]", "list rules with given tag",
@@ -458,7 +459,11 @@ static int cmd_yr(R2Yara *r2yara, const char *input) {
 	}
 	switch (*input) {
 	case '?': // "yr?"
+	case 0:
 		r_core_cmd_help (r2yara->core, short_help_message);
+		break;
+	case 'l':
+		cmd_yara_list (r2yara);
 		break;
 	case '/': // "yr/" <- imho makes more sense
 	case 's': // "yrs"
@@ -484,9 +489,6 @@ static int cmd_yr(R2Yara *r2yara, const char *input) {
 		break;
 	case 'v': // "yrv"
 		res = cmd_yara_version (r2yara);
-		break;
-	case 0:
-		cmd_yara_list (r2yara);
 		break;
 	}
 	free (inp);
@@ -559,15 +561,28 @@ err_exit:
 	return false;
 }
 
-static int cmd_yara_init(void *user, const char *cmd) {
-	RCore* core = (RCore *)user;
+static void setup_config(R2Yara *r2yara) {
+	RConfig *cfg = r2yara->core->config;
+	return;
+	r_config_lock (cfg, false);
+	char *me = r_sys_whoami ();
+	r_config_set (cfg, "yara.author", me);
+	free (me);
+	r_config_lock (cfg, true);
+}
 
-	R2Yara *r2yara = R_NEW0 (R2Yara);
+static int cmd_yara_init(void *user, const char *cmd) {
+	RCmd *rcmd = (RCmd *)user;
+	RCore* core = (RCore *)rcmd->data;
+
+	R2Yara *r2yara = &Gr2yara;
+	memset (r2yara, 0, sizeof (R2Yara));
 	r2yara->iova = true;
 	r2yara->core = core;
 	r2yara->rules_list = r_list_newf ((RListFree) yr_rules_destroy);
 
 	yr_initialize ();
+	setup_config (r2yara);
 
 	cmd_yara_load_default_rules (r2yara);
 	r2yara->initialized = true;
@@ -576,8 +591,9 @@ static int cmd_yara_init(void *user, const char *cmd) {
 }
 
 static int cmd_yara_call(void *user, const char *input) {
+	RCmd *rcmd = (RCmd *)user;
+	RCore* core = (RCore *)rcmd->data;
 	R2Yara *r2yara = &Gr2yara;
-	RCore* core = (void*)user; // Gr2yara->core;
 	if (r_str_startswith (input, "yr")) {
 		cmd_yr (r2yara, input + 2);
 		return true;
@@ -596,6 +612,8 @@ static int cmd_yara_call(void *user, const char *input) {
 }
 
 static int cmd_yara_fini(void *user, const char *cmd) {
+	RCmd *rcmd = (RCmd *)user;
+	RCore* core = (RCore *)rcmd->data;
 	R2Yara *r2yara = &Gr2yara;
 	if (r2yara->initialized) {
 		r_list_free (r2yara->rules_list);
