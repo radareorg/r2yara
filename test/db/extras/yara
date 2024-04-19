@@ -1,3 +1,21 @@
+NAME=yara: list
+FILE=malloc://1024
+CMDS=<<EOF
+yrl
+EOF
+EXPECT=<<EOF
+HelloWorld
+BLOWFISH_Constants
+MD5_Constants
+RC6_Constants
+RIPEMD160_Constants
+SHA1_Constants
+SHA256_Constants
+SHA512_Constants
+WHIRLPOOL_Constants
+EOF
+RUN
+
 NAME=yara: tags
 FILE=malloc://1024
 CMDS=<<EOF
