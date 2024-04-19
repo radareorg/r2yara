@@ -561,13 +561,31 @@ err_exit:
 	return false;
 }
 
+static char *yyyymmdd(void) {
+	time_t current_time;
+	struct tm *time_info;
+	char *ds = calloc (16, 1);
+
+	time (&current_time);
+	time_info = localtime (&current_time);
+
+	strftime (ds, 16, "%Y-%m-%d", time_info);
+	return ds;
+}
+
 static void setup_config(R2Yara *r2yara) {
 	RConfig *cfg = r2yara->core->config;
-	return;
 	r_config_lock (cfg, false);
 	char *me = r_sys_whoami ();
 	r_config_set (cfg, "yara.author", me);
 	free (me);
+	r_config_set (cfg, "yara.description", "My first yara rule");
+	char *ymd = yyyymmdd();
+	r_config_set (cfg, "yara.date", ymd);
+	free (ymd);
+	r_config_set (cfg, "yara.version", "0.1");
+	r_config_set (cfg, "yara.rule", "rulename");
+	r_config_set (cfg, "yara.tags", "test");
 	r_config_lock (cfg, true);
 }
 
