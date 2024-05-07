@@ -10,6 +10,7 @@ const char *short_help_message_yrg[] = {
 	"yrgs", " ([len])", "add string (optionally specify the length)",
 	"yrgx", " ([len])", "add hexpairs of blocksize (or custom length)",
 	"yrgf", " ([len])", "add function bytepattern signature",
+	"yrgz", "", "add all strings referenced from current function",
 	NULL
 };
 
@@ -397,6 +398,17 @@ static void cmd_yara_gen_show(R2Yara *r2yara, int format) {
 	r_cons_printf ("}\n");
 }
 
+static char *yarastring(const char *s) {
+	RStrBuf *sb = r_strbuf_new ("\"");
+	char *a = strdup (s);
+	r_str_trim (a);
+	a = r_str_replace_all (a, "\n", "\\n");
+	r_strbuf_append (sb, a);
+	r_strbuf_append (sb, "\"");
+	free (a);
+	return r_strbuf_drain (sb);;
+}
+
 static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
 	const char arg0 = input? *input: 0;
 	switch (arg0) {
@@ -405,6 +417,22 @@ static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
 		break;
 	case '?':
 		r_core_cmd_help (r2yara->core, short_help_message_yrg);
+		break;
+	case 'z':
+		{
+			char *s = r_core_cmd_str (r2yara->core, "axff~str.~[3]~$$");
+			r_str_trim (s);
+			RList *words = r_str_split_list (s, "\n", 0);
+			RListIter *iter;
+			char *word;
+			r_list_foreach (words, iter, word) {
+				char *z = r_core_cmd_strf (r2yara->core, "psz @ %s", word);
+				r_list_append (r2yara->genstrings, yarastring (z));
+				free (z);
+			}
+			r_list_free (words);
+			free (s);
+		}
 		break;
 	case 'f':
 		{
@@ -445,10 +473,7 @@ static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
 	case 's':
 		{
 			char *s = r_core_cmd_str (r2yara->core, "psz");
-			r_str_trim (s);
-			s = r_str_replace_all (s, "\n", "\\n");
-			char *ss = r_str_newf ("\"%s\"", s);
-			r_list_append (r2yara->genstrings, ss);
+			r_list_append (r2yara->genstrings, yarastring (s));
 			free (s);
 		}
 		break;
