@@ -22,19 +22,24 @@ See `man 7 r2yara` for some examples.
 You will get the `yr` command inside `radare2` shell
 
 ```
-[0x00000000]> yr?
+[0x100003a84]> yr?*
 Usage: yr [action] [args..]   load and run yara rules inside r2
 | yr [file]        add yara rules from file
 | yr               same as yr?
 | yr-*             unload all the rules
 | yr?              show this help (same as 'yara?')
-| yrg-[*]          delete last strings/bytes from generated rule or all of them (yr-*)
-| yrg[-sx]         generate yara rule, add (s)tring or (x)bytes, or (-)pop (-*) delete all
+| yrg[?][-sx]      generate yara rule
 | yrl              list loaded rules
 | yrs[q]           scan the current file, suffix with 'q' for quiet mode
 | yrt ([tagname])  list tags from loaded rules, or list rules from given tag
 | yrv              show version information about r2yara and yara
-[0x00000000]> q
+Usage: yrg [action] [args..]   load and run yara rules inside r2
+| yrg-          delete last pattern added to the yara rule
+| yrg-*         delete all the patterns in the current rule
+| yrgs ([len])  add string (optionally specify the length)
+| yrgx ([len])  add hexpairs of blocksize (or custom length)
+| yrgf ([len])  add function bytepattern signature
+[0x100003a84]>
 ```
 
 Run it like this:

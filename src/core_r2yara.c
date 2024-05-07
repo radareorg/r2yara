@@ -19,7 +19,7 @@ const char *short_help_message[] = {
 	"yr", "", "same as yr?",
 	"yr", "-*", "unload all the rules",
 	"yr?", "", "show this help (same as 'yara?')",
-	"yrg", "[?][-sx]", "generate yara rule",
+	"yrg", "[?][-sxf]", "generate yara rule",
 	"yrl", "", "list loaded rules",
 	"yrs", "[q]", "scan the current file, suffix with 'q' for quiet mode",
 	"yrt", " ([tagname])", "list tags from loaded rules, or list rules from given tag",
@@ -379,7 +379,7 @@ static void cmd_yara_gen_show(R2Yara *r2yara, int format) {
 	r_cons_printf ("    date = \"%s\"\n", date);
 	r_cons_printf ("    version = \"%s\"\n", vers);
 	if (r_list_empty (r2yara->genstrings)) {
-		R_LOG_WARN ("Use 'yrg[sx..] subcommands to register strings, bytes to the current rule");
+		R_LOG_WARN ("See 'yrg?' to find out which subcommands use to append patterns to the rule");
 	} else {
 		r_cons_printf ("  strings:\n");
 		RListIter *iter;
@@ -406,10 +406,47 @@ static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
 	case '?':
 		r_core_cmd_help (r2yara->core, short_help_message_yrg);
 		break;
+	case 'f':
+		{
+			char *b = r_core_cmd_str (r2yara->core, "zj $$~{.bytes}");
+			char *m = r_core_cmd_str (r2yara->core, "zj $$~{.mask}");
+
+			r_str_trim (b);
+			r_str_trim (m);
+			size_t blen = strlen (b);
+			if (blen != strlen (m)) {
+				R_LOG_WARN ("Mismatch");
+				break;
+			}
+			if (blen % 2) {
+				R_LOG_WARN ("Uneven pattern");
+				break;
+			}
+			if (blen == 0) {
+				R_LOG_WARN ("No byte pattern");
+				break;
+			}
+			R_LOG_DEBUG ("-> %s\n", b);
+			R_LOG_DEBUG ("=> %s\n", m);
+			RStrBuf *sb = r_strbuf_new ("{");
+			int i;
+			for (i = 0; b[i]; i += 2) {
+				if (r_str_startswith (m + i, "ff")) {
+					r_strbuf_appendf (sb, " %c%c", b[i], b[i + 1]);
+				} else {
+					r_strbuf_append (sb, " ??");
+				}
+			}
+			r_strbuf_append (sb, " }");
+			char *s = r_strbuf_drain (sb);
+			r_list_append (r2yara->genstrings, s);
+		}
+		break;
 	case 's':
 		{
 			char *s = r_core_cmd_str (r2yara->core, "psz");
 			r_str_trim (s);
+			s = r_str_replace_all (s, "\n", "\\n");
 			char *ss = r_str_newf ("\"%s\"", s);
 			r_list_append (r2yara->genstrings, ss);
 			free (s);
