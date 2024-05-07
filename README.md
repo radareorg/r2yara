@@ -39,6 +39,7 @@ Usage: yrg [action] [args..]   load and run yara rules inside r2
 | yrgs ([len])  add string (optionally specify the length)
 | yrgx ([len])  add hexpairs of blocksize (or custom length)
 | yrgf ([len])  add function bytepattern signature
+| yrgz          add all strings referenced from current function
 [0x100003a84]>
 ```
 
