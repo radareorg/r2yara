@@ -3,6 +3,44 @@
 #include <r_core.h>
 #include <yara.h>
 
+const char *short_help_message_yrg[] = {
+	"Usage: yrg", "[action] [args..]", " load and run yara rules inside r2",
+	"yrg-", "", "delete last pattern added to the yara rule",
+	"yrg-", "*", "delete all the patterns in the current rule",
+	"yrgs", " ([len])", "add string (optionally specify the length)",
+	"yrgx", " ([len])", "add hexpairs of blocksize (or custom length)",
+	"yrgf", " ([len])", "add function bytepattern signature",
+	NULL
+};
+
+const char *short_help_message[] = {
+	"Usage: yr", "[action] [args..]", " load and run yara rules inside r2",
+	"yr", " [file]", "add yara rules from file",
+	"yr", "", "same as yr?",
+	"yr", "-*", "unload all the rules",
+	"yr?", "", "show this help (same as 'yara?')",
+	"yrg", "[?][-sx]", "generate yara rule",
+	"yrl", "", "list loaded rules",
+	"yrs", "[q]", "scan the current file, suffix with 'q' for quiet mode",
+	"yrt", " ([tagname])", "list tags from loaded rules, or list rules from given tag",
+	"yrv", "", "show version information about r2yara and yara",
+	NULL
+};
+
+const char *long_help_message[] = {
+	"Usage: yara", " [action] [args..]", " load and run yara rules inside r2",
+	"yara", " add [file]", "Add yara rules from file, or open $EDITOR with yara rule template",
+	"yara", " clear", "Clear all rules",
+	"yara", " help", "Show this help (same as 'yara?')",
+	"yara", " list", "List all rules",
+	"yara", " scan[S]", "Scan the current file, if S option is given it prints matching strings",
+	"yara", " show [name]", "Show rules containing name",
+	"yara", " tag [name]", "List rules with tag 'name'",
+	"yara", " tags", "List tags from the loaded rules",
+	"yara", " version", "Show version information about r2yara and yara",
+	NULL
+};
+
 #if R2_VERSION_NUMBER < 50809
 static inline char *r_str_after(char *s, char c) {
 	if (s) {
@@ -270,7 +308,7 @@ static int cmd_yara_clear(R2Yara *r2yara) {
 static void logerr(YR_COMPILER* compiler, R_NULLABLE const char *arg) {
 	char buf[64];
 	const char *errmsg = yr_compiler_get_error_message (compiler, buf, sizeof (buf));
-	if (arg) {
+	if (R_STR_ISNOTEMPTY (arg)) {
 		R_LOG_ERROR ("%s %s", errmsg, arg);
 	} else {
 		R_LOG_ERROR ("%s", errmsg);
@@ -364,6 +402,9 @@ static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
 	switch (arg0) {
 	case 0:
 		cmd_yara_gen_show (r2yara, 0);
+		break;
+	case '?':
+		r_core_cmd_help (r2yara->core, short_help_message_yrg);
 		break;
 	case 's':
 		{
@@ -464,35 +505,7 @@ static int cmd_yara_version(R2Yara *r2yara) {
 	return 0;
 }
 
-const char *short_help_message[] = {
-	"Usage: yr", "[action] [args..]", " load and run yara rules inside r2",
-	"yr", " [file]", "add yara rules from file",
-	"yr", "", "same as yr?",
-	"yr", "-*", "unload all the rules",
-	"yr", "?", "show this help (same as 'yara?')",
-	"yrg", "-[*]", "delete last strings/bytes from generated rule or all of them (yr-*)",
-	"yrg", "[-sx]", "generate yara rule, add (s)tring or (x)bytes, or (-)pop (-*) delete all",
-	"yrl", "", "list loaded rules",
-	"yrs", "[q]", "scan the current file, suffix with 'q' for quiet mode",
-	"yrt", " ([tagname])", "list tags from loaded rules, or list rules from given tag",
-	"yrv", "", "show version information about r2yara and yara",
-	NULL
-};
-
-const char *long_help_message[] = {
-	"Usage: yara", " [action] [args..]", " load and run yara rules inside r2",
-	"yara", " add [file]", "Add yara rules from file, or open $EDITOR with yara rule template",
-	"yara", " clear", "Clear all rules",
-	"yara", " help", "Show this help (same as 'yara?')",
-	"yara", " list", "List all rules",
-	"yara", " scan[S]", "Scan the current file, if S option is given it prints matching strings",
-	"yara", " show [name]", "Show rules containing name",
-	"yara", " tag [name]", "List rules with tag 'name'",
-	"yara", " tags", "List tags from the loaded rules",
-	"yara", " version", "Show version information about r2yara and yara",
-	NULL
-};
-
+// TODO: deprecate the "yara" command, unless we expose "yara" and "yarac" commands as the original tools from the r2 shell
 static int cmd_yara_process(R2Yara *r2yara, const char* input) {
 	char *inp = strdup (input);
 	char *arg = r_str_after (inp, ' ');
