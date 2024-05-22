@@ -1,3 +1,4 @@
+ROOT=$(shell pwd)/..
 include ../config.mk
 
 CFLAGS+=-g

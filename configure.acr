@@ -12,4 +12,8 @@ LANG_C!
 PKGCFG! YR_CFLAGS YR_LDFLAGS yara
 PKGCFG! R2_CFLAGS R2_LDFLAGS r_core
 
+(( OPTIONS ))
+
+ARG_WITH USE_YARAX yarax build and link to the Rust Yara-X library ;
+
 SUBDIRS . config.mk ;

@@ -1,9 +1,22 @@
 include config.mk
+ifeq ($(USE_YARAX),1)
+CFLAGS+=USE_YARAX=1
+endif
 
 all clean user-install install symstall user-uninstall uninstall:
+ifeq ($(USE_YARAX),1)
+	$(MAKE) yarax
+endif
 	$(MAKE) -C src $@
 
 mrproper: clean
 	rm -f config.mk
+
+yarax: yara-x
+	cd yara-x && cargo build -r
+	cd yara-x/capi && cargo build -r
+
+yara-x:
+	git clone https://github.com/VirusTotal/yara-x
 
 RULESDIR=$(R2PM_USRPLUGIN_DIR)/rules-yara3
