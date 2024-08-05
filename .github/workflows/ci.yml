@@ -57,8 +57,7 @@ jobs:
     - name: Running Testsuite
       run: r2pm -r make -C test
   build-macos:
-    runs-on: macos-11
-#   runs-on: macos-12   # maybe this version have aclocal
+    runs-on: macos-12
     steps:
     - uses: actions/checkout@v4
     - name: Install dependencies
