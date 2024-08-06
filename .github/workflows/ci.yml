@@ -55,7 +55,7 @@ jobs:
     - name: Testing r2yara installation
       run: R2_DEBUG=1 r2 -qcq -c 'yrv' --
     - name: Running Testsuite
-      run: r2pm -r make -C test
+      run: make -C test
   build-macos:
     runs-on: macos-12
     steps:
