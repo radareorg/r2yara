@@ -48,8 +48,10 @@ jobs:
     - uses: actions/checkout@v4
     - name: Installing radare2
       run: |
-        git clone --depth=1 https://github.com/radareorg/radare2 && cd radare2
-        sys/install.sh
+        wget "https://github.com/radareorg/radare2/releases/download/${R2V}/radare2_${R2V}_amd64.deb"
+        wget "https://github.com/radareorg/radare2/releases/download/${R2V}/radare2-dev_${R2V}_amd64.deb"
+        sudo dpkg -i "radare2_${R2V}_amd64.deb"
+        sudo dpkg -i "radare2-dev_${R2V}_amd64.deb"
     - name: Installing yara and r2yara via r2pm
       run: r2pm -Uci r2yara
     - name: Testing r2yara installation
