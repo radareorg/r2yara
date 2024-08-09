@@ -39,12 +39,12 @@ f
 EOF
 EXPECT=<<EOF
 BLOWFISH_Constants
-0x004960c0: yara0.BLOWFISH_Constants_0 : a60b31d1
-0x004960c4: yara0.BLOWFISH_Constants_1 : acb5df98
-0x004960c8: yara0.BLOWFISH_Constants_2 : db72fd2f
-0x004960cc: yara0.BLOWFISH_Constants_3 : b7df1ad0
-0x004964c0: yara0.BLOWFISH_Constants_4 : e9707a4b
-0x004968c8: yara0.BLOWFISH_Constants_5 : 1c264cf6
+0x002960c0: yara0.BLOWFISH_Constants_0 : a60b31d1
+0x002960c4: yara0.BLOWFISH_Constants_1 : acb5df98
+0x002960c8: yara0.BLOWFISH_Constants_2 : db72fd2f
+0x002960cc: yara0.BLOWFISH_Constants_3 : b7df1ad0
+0x002964c0: yara0.BLOWFISH_Constants_4 : e9707a4b
+0x002968c8: yara0.BLOWFISH_Constants_5 : 1c264cf6
 SHA256_Constants
 0x001936c4: yara1.SHA256_Constants_0 : 982f8a42
 0x0019372b: yara1.SHA256_Constants_1 : 91443771
@@ -54,12 +54,12 @@ SHA256_Constants
 0x0019372b 4 yara1.SHA256_Constants_1
 0x0019379d 4 yara1.SHA256_Constants_2
 0x001937e5 4 yara1.SHA256_Constants_3
-0x004960c0 4 yara0.BLOWFISH_Constants_0
-0x004960c4 4 yara0.BLOWFISH_Constants_1
-0x004960c8 4 yara0.BLOWFISH_Constants_2
-0x004960cc 4 yara0.BLOWFISH_Constants_3
-0x004964c0 4 yara0.BLOWFISH_Constants_4
-0x004968c8 4 yara0.BLOWFISH_Constants_5
+0x002960c0 4 yara0.BLOWFISH_Constants_0
+0x002960c4 4 yara0.BLOWFISH_Constants_1
+0x002960c8 4 yara0.BLOWFISH_Constants_2
+0x002960cc 4 yara0.BLOWFISH_Constants_3
+0x002964c0 4 yara0.BLOWFISH_Constants_4
+0x002968c8 4 yara0.BLOWFISH_Constants_5
 EOF
 RUN
 

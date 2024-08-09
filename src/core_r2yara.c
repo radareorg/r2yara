@@ -340,7 +340,6 @@ static int cmd_yara_list(R2Yara *r2yara) {
 	R2YR_RULE* rule;
 	r_list_foreach (r2yara->rules_list, rules_it, rules) {
 		yr_rules_foreach (rules, rule) {
-			r_cons_printf ("%p\n", rule);
 			r_cons_printf ("%s\n", rule->identifier);
 		}
 	}
