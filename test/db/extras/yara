@@ -1,10 +1,11 @@
 NAME=yara: list
 FILE=malloc://1024
 CMDS=<<EOF
+yr-
+yr ../rules/crypto.yara
 yrl
 EOF
 EXPECT=<<EOF
-HelloWorld
 BLOWFISH_Constants
 MD5_Constants
 RC6_Constants
