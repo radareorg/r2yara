@@ -46,16 +46,29 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
+      with:
+        repository: radareorg/radare2
+        ref: master
+        path: ./radare2
     - name: Installing radare2
       run: |
-        git clone --depth=1 https://github.com/radareorg/radare2 && cd radare2
+        cd radare2
         sys/install.sh
-    - name: Installing yara and r2yara via r2pm
-      run: r2pm -Uci r2yara
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        path: ./r2yara
+    - name: Init r2pm in a local folder
+      run: |
+        export R2PM_GITDIR=`pwd`
+        r2pm -ci yara
+        r2pm -i r2yara
     - name: Testing r2yara installation
       run: R2_DEBUG=1 r2 -qcq -c 'yrv' --
     - name: Running Testsuite
-      run: make -C test
+      run: |
+        cd r2yara
+        make -C test
   build-macos:
     runs-on: macos-12
     steps:
