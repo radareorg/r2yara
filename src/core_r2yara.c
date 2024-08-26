@@ -36,6 +36,7 @@ const char *short_help_message_yrg[] = {
 const char *short_help_message[] = {
 	"Usage: yr", "[action] [args..]", " load and run yara rules inside r2",
 	"yr", " [file]", "add yara rules from file",
+	"yr+", "", "add the currently generated yara rule",
 	"yr", "", "same as yr?",
 	"yr", "-*", "unload all the rules",
 	"yr?", "", "show this help (same as 'yara?')",
@@ -49,7 +50,7 @@ const char *short_help_message[] = {
 
 const char *long_help_message[] = {
 	"Usage: yara", " [action] [args..]", " load and run yara rules inside r2",
-	"yara", " add [file]", "Add yara rules from file, or open $EDITOR with yara rule template",
+	"yara", " add [file]", "Add yara rules from file",
 	"yara", " clear", "Clear all rules",
 	"yara", " help", "Show this help (same as 'yara?')",
 	"yara", " list", "List all rules",
@@ -86,8 +87,6 @@ typedef struct {
 // RCorePlugins have no session yet // R2_600
 // TODO: remove globals when r2-6.0.0 ships RCoreSession
 static R_TH_LOCAL R2Yara Gr2yara = {0};
-
-static const char yara_rule_template[] = "rule RULE_NAME {\n  strings:\n\n  condition:\n}";
 
 /* Because of how the rules are compiled, we are not allowed to add more
  * rules to a compiler once it has compiled. That's why we keep a list
@@ -423,7 +422,8 @@ err_exit:
 	return false;
 }
 
-static void cmd_yara_gen_show(R2Yara *r2yara, int format) {
+static RStrBuf *get_current_rule(R2Yara *r2yara) {
+	RStrBuf *sb = r_strbuf_new ("");
 	RConfig *cfg = r2yara->core->config;
 	const char *name = r_config_get (cfg, "yara.rule");
 	const char *tags = r_config_get (cfg, "yara.tags");
@@ -432,29 +432,61 @@ static void cmd_yara_gen_show(R2Yara *r2yara, int format) {
 	const char *date = r_config_get (cfg, "yara.date");
 	const char *vers = r_config_get (cfg, "yara.version");
 	const int amount = r_config_get_i (cfg, "yara.amount");
-	r_cons_printf ("rule %s : %s {\n", name, tags);
-	r_cons_printf ("  meta:\n");
-	r_cons_printf ("    author = \"%s\"\n", auth);
-	r_cons_printf ("    description = \"%s\"\n", desc);
-	r_cons_printf ("    date = \"%s\"\n", date);
-	r_cons_printf ("    version = \"%s\"\n", vers);
+	r_strbuf_appendf (sb, "rule %s : %s {\n", name, tags);
+	r_strbuf_appendf (sb,"  meta:\n");
+	r_strbuf_appendf (sb,"    author = \"%s\"\n", auth);
+	r_strbuf_appendf (sb,"    description = \"%s\"\n", desc);
+	r_strbuf_appendf (sb,"    date = \"%s\"\n", date);
+	r_strbuf_appendf (sb,"    version = \"%s\"\n", vers);
 	if (r_list_empty (r2yara->genstrings)) {
 		R_LOG_WARN ("See 'yrg?' to find out which subcommands use to append patterns to the rule");
 	} else {
-		r_cons_printf ("  strings:\n");
+		r_strbuf_append (sb,"  strings:\n");
 		RListIter *iter;
 		const char *s;
 		r_list_foreach (r2yara->genstrings, iter, s) {
-			r_cons_printf ("    $ = %s\n", s);
+			r_strbuf_appendf (sb,"    $ = %s\n", s);
 		}
-		r_cons_printf ("  condition:\n");
+		r_strbuf_append (sb,"  condition:\n");
 		if (amount > 1) {
-			r_cons_printf ("    %d of them\n", amount);
+			r_strbuf_appendf (sb,"    %d of them\n", amount);
 		} else {
-			r_cons_printf ("    all of them\n");
+			r_strbuf_append (sb,"    all of them\n");
 		}
 	}
-	r_cons_printf ("}\n");
+	r_strbuf_append (sb,"}\n");
+	return sb;
+}
+
+static void cmd_yara_gen_show(R2Yara *r2yara) {
+	r_cons_printf("%s", r_strbuf_tostring(get_current_rule(r2yara)));
+}
+
+static void cmd_yara_add_current(R2Yara *r2yara) {
+	R2YR_COMPILER* compiler = NULL;
+	R2YR_RULES* yr_rules = NULL;
+
+	if (r_list_empty (r2yara->genstrings)) {
+		R_LOG_WARN ("Empty pattern, see 'yrg?' to find out which subcommands use to append patterns to the rule");
+		return;
+	}
+
+	if (yr_compiler_create (&compiler) != ERROR_SUCCESS) {
+		logerr (compiler, NULL);
+	}
+	if (yr_compiler_add_string (compiler, r_strbuf_tostring(get_current_rule(r2yara)), NULL) > 0) {
+		logerr (compiler, NULL);
+	}
+
+	if (yr_compiler_get_rules (compiler, &yr_rules) != ERROR_SUCCESS) {
+		logerr (compiler, NULL);
+	}
+
+	r_list_append (r2yara->rules_list, yr_rules);
+	if (compiler != NULL) {
+		R2YR_COMPILER_DESTROY (compiler);
+	}
+	R_LOG_INFO ("Rule successfully added");
 }
 
 static char *yarastring(const char *s) {
@@ -472,7 +504,7 @@ static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
 	const char arg0 = input? *input: 0;
 	switch (arg0) {
 	case 0:
-		cmd_yara_gen_show (r2yara, 0);
+		cmd_yara_gen_show (r2yara);
 		break;
 	case '?':
 		r_core_cmd_help (r2yara->core, short_help_message_yrg);
@@ -562,72 +594,19 @@ static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
 }
 
 static int cmd_yara_add(R2Yara *r2yara, const char* input) {
+	/* Add a rule with user input */
+	R2YR_COMPILER* compiler = NULL;
+	int i;
 	if (!input) {
 		R_LOG_ERROR ("Missing argument");
 		return false;
 	}
-	/* Add a rule with user input */
-	R2YR_COMPILER* compiler = NULL;
-	int result, i, continue_edit;
 
 	for (i = 0; input[i]; i++) {
 		if (input[i] != ' ') {
 			return cmd_yara_add_file (r2yara, input + i);
 		}
 	}
-
-#if USE_YARAX
-	uint32_t flags = 0;
-	if (yrx_compiler_create (flags, &compiler) != SUCCESS) {
-		logerr (compiler, NULL);
-		return false;
-	}
-#else
-	if (yr_compiler_create (&compiler) != ERROR_SUCCESS) {
-		logerr (compiler, NULL);
-		return false;
-	}
-#endif
-
-	char *old_template = strdup (yara_rule_template);
-	char *modified_template = NULL;
-	do {
-		char *modified_template = r_core_editor (r2yara->core, NULL, old_template);
-		R_FREE (old_template);
-		if (!modified_template) {
-			R_LOG_ERROR ("Something bad happened with the temp file");
-			goto err_exit;
-		}
-
-#if USE_YARAX
-		result = yrx_compiler_add_source (compiler, modified_template);
-#else
-		result = yr_compiler_add_string (compiler, modified_template, NULL);
-#endif
-		if (result > 0) {
-			logerr (compiler, NULL);
-			continue_edit = r_cons_yesno ('y', "Do you want to continue editing the rule? [y]/n\n");
-			if (!continue_edit) {
-				goto err_exit;
-			}
-			old_template = modified_template;
-			modified_template = NULL;
-		}
-	} while (result > 0);
-
-	free (modified_template);
-	if (compiler != NULL) {
-		R2YR_COMPILER_DESTROY (compiler);
-	}
-	R_LOG_INFO ("Rule successfully added");
-	return true;
-
-err_exit:
-	if (compiler != NULL) {
-	}
-	free (modified_template);
-	free (old_template);
-	return false;
 }
 
 static int cmd_yara_version(R2Yara *r2yara) {
@@ -697,17 +676,19 @@ static int cmd_yr(R2Yara *r2yara, const char *input) {
 			res = cmd_yara_scan (r2yara, arg);
 		}
 		break;
-	case 'g':
+	case 'g': // "yrg"
 		cmd_yara_gen (r2yara, input + 1);
 		break;
-	case '+':
+	case '+': // "yr+""
+		cmd_yara_add_current (r2yara);
+		break;
 	case ' ':
 		cmd_yara_add (r2yara, arg);
 		break;
 	case '-':
 		cmd_yara_clear (r2yara);
 		break;
-	case 't': // "yrs"
+	case 't': // "yrt"
 		if (input[1]) {
 			cmd_yara_tag (r2yara, arg);
 		} else {

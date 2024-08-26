@@ -68,7 +68,7 @@ NAME=yara: scan with strings
 FILE=malloc://1024
 CMDS=<<EOF
 wx cffbc0b5e9b5dba5a5dbb5e9d728ae2222ae28d7
-yrs
+yr/
 EOF
 EXPECT=<<EOF
 SHA512_Constants
@@ -89,5 +89,20 @@ EOF
 EXPECT=<<EOF
 2
 2
+EOF
+RUN
+
+NAME=yr+
+FILE=malloc://1024
+CMDS=<<EOF
+yr-
+e yara.rule = test
+w Test
+yrgs
+yr+
+yrl
+EOF
+EXPECT=<<EOF
+test
 EOF
 RUN
