@@ -473,20 +473,24 @@ static void cmd_yara_add_current(R2Yara *r2yara) {
 
 	if (yr_compiler_create (&compiler) != ERROR_SUCCESS) {
 		logerr (compiler, NULL);
+		goto err_exit;
 	}
 	if (yr_compiler_add_string (compiler, r_strbuf_tostring(get_current_rule(r2yara)), NULL) > 0) {
 		logerr (compiler, NULL);
+		goto err_exit;
 	}
-
 	if (yr_compiler_get_rules (compiler, &yr_rules) != ERROR_SUCCESS) {
 		logerr (compiler, NULL);
+		goto err_exit;
 	}
 
 	r_list_append (r2yara->rules_list, yr_rules);
+	R_LOG_INFO ("Rule successfully added");
+	
+	err_exit:
 	if (compiler != NULL) {
 		R2YR_COMPILER_DESTROY (compiler);
 	}
-	R_LOG_INFO ("Rule successfully added");
 }
 
 static char *yarastring(const char *s) {
