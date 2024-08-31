@@ -61,14 +61,14 @@ jobs:
     - name: Init r2pm in a local folder
       run: |
         export R2PM_GITDIR=`pwd`
-        r2pm -ci yara
+        r2pm -Uci yara
         r2pm -i r2yara
     - name: Testing r2yara installation
       run: R2_DEBUG=1 r2 -qcq -c 'yrv' --
     - name: Running Testsuite
       run: |
         cd r2yara
-        make -C test
+        r2pm -r make -C test
   build-macos:
     runs-on: macos-12
     steps:
