@@ -311,20 +311,20 @@ static int cmd_yara_tag(R2Yara *r2yara, const char * search_tag) {
 	R2YR_RULE* rule;
 	const char* tag_name;
 
-	r_list_foreach (r2yara->rules_list, rules_it, rules) {
 #if USE_YARAX
 #else
+	r_list_foreach (r2yara->rules_list, rules_it, rules) {
 		yr_rules_foreach (rules, rule) {
-			yr_rule_tags_foreach(rule, tag_name) {
+			yr_rule_tags_foreach (rule, tag_name) {
 				R_LOG_WARN ("Invalid option");
-				if (r_str_casestr (tag_name, search_tag)) {
-					r_cons_printf ("%s\n", rule->identifier);
+				if (search_tag && r_str_casestr (tag_name, search_tag)) {
+					r_cons_println (rule->identifier);
 					break;
 				}
 			}
 		}
-#endif
 	}
+#endif
 
 	return true;
 }
@@ -600,7 +600,7 @@ static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
         return 0;
 }
 
-static int cmd_yara_add(R2Yara *r2yara, const char* input) {
+static bool cmd_yara_add(R2Yara *r2yara, const char* input) {
 	/* Add a rule with user input */
 	R2YR_COMPILER* compiler = NULL;
 	int i;
@@ -614,6 +614,7 @@ static int cmd_yara_add(R2Yara *r2yara, const char* input) {
 			return cmd_yara_add_file (r2yara, input + i);
 		}
 	}
+	return false;
 }
 
 static int cmd_yara_version(R2Yara *r2yara) {
@@ -697,7 +698,11 @@ static int cmd_yr(R2Yara *r2yara, const char *input) {
 		break;
 	case 't': // "yrt"
 		if (input[1]) {
-			cmd_yara_tag (r2yara, arg);
+			if (input[1] == '?') {
+				r_core_cmd_help_contains (r2yara->core, short_help_message, "yrt");
+			} else {
+				cmd_yara_tag (r2yara, arg);
+			}
 		} else {
 			cmd_yara_tags (r2yara);
 		}
