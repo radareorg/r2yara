@@ -45,23 +45,23 @@ Usage: yrg [action] [args..]   load and run yara rules inside r2
 
 ### Yara generator usage
 
-Commands Overview
+**Commands Overview**
 
-* **yrg** - Initialize a YARA rule.
-    yrgs - Add strings as patterns.
-    yrgx - Add hex patterns.
-    yrgf - Add function byte signatures.
-    yrgz - Add all strings from the current function.
+**yrg** - Initialize a YARA rule.
+**yrgs** - Add strings as patterns.
+**yrgx** - Add hex patterns.
+**yrgf** - Add function byte signatures.
+**yrgz** - Add all strings from the current function.
 
 To start using r2yara to create YARA rules automatically, follow these steps:
 
-##### Open a binary with radare2:
+**Open a binary with radare2:**
 
 ```
 r2 <binary>
 ```
 
-##### Generate a YARA rule:
+**Generate a YARA rule:**
 
 ```
 yrg
@@ -69,39 +69,36 @@ yrg
 
 This initializes a new YARA rule.
 
-##### Add strings from the binary as patterns:
+**Add strings from the binary as patterns:**
 
 ```
 yrgs
 ```
 
-##### Add hex patterns:
+**Add hex patterns:**
 
 ```
 yrgx
 ```
 
-##### Optionally, add function signatures:
+**Optionally, add function signatures:**
 
 ```
 yrgf
 ```
 
-##### Once you've added the desired patterns, save the rule:
+**Once you've added the desired patterns, save the rule:**
 
 ```
 ys <rule_name>
 ```
 
-##### To scan the binary with the loaded rules:
-
-missing newline
-
+**To scan the binary with the loaded rules:**
+```
 yrs
 ```
-
-    yrs - Scan the binary with loaded YARA rules.
-    ys <rule_name> - Save the generated rule.
+**yrs** - Scan the binary with loaded YARA rules.
+**ys** <rule_name> - Save the generated rule.
 
 Run it like this:
 
