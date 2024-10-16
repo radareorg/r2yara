@@ -47,7 +47,7 @@ Usage: yrg [action] [args..]   load and run yara rules inside r2
 
 Commands Overview
 
-    yrg - Initialize a YARA rule.
+* **yrg** - Initialize a YARA rule.
     yrgs - Add strings as patterns.
     yrgx - Add hex patterns.
     yrgf - Add function byte signatures.
