@@ -94,6 +94,7 @@ ys <rule_name>
 ```
 
 **To scan the binary with the loaded rules:**
+
 ```
 yrs
 ```
