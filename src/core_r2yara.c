@@ -815,18 +815,26 @@ static char *yyyymmdd(void) {
 
 static void setup_config(R2Yara *r2yara) {
 	RConfig *cfg = r2yara->core->config;
+	RConfigNode *node = NULL;
 	r_config_lock (cfg, false);
 	char *me = r_sys_whoami ();
-	r_config_set (cfg, "yara.author", me);
+	node = r_config_set (cfg, "yara.author", me);
+	r_config_node_desc (node, "Author of the YARA rule");
 	free (me);
-	r_config_set (cfg, "yara.description", "My first yara rule");
-	char *ymd = yyyymmdd();
-	r_config_set (cfg, "yara.date", ymd);
+	node = r_config_set (cfg, "yara.description", "My first yara rule");
+	r_config_node_desc (node, "YARA rule description");
+	char *ymd = yyyymmdd ();
+	node = r_config_set (cfg, "yara.date", ymd);
+	r_config_node_desc (node, "YARA rule creation date");
 	free (ymd);
-	r_config_set (cfg, "yara.version", "0.1");
-	r_config_set (cfg, "yara.rule", "rulename");
-	r_config_set (cfg, "yara.tags", "test");
-	r_config_set_i (cfg, "yara.amount", 0);
+	node = r_config_set (cfg, "yara.version", "0.1");
+	r_config_node_desc (node, "YARA rule version");
+	node = r_config_set (cfg, "yara.rule", "rulename");
+	r_config_node_desc (node, "YARA rule name");
+	node = r_config_set (cfg, "yara.tags", "test");
+	r_config_node_desc (node, "YARA rule tags");
+	node = r_config_set_i (cfg, "yara.amount", 0);
+	r_config_node_desc (node, "Amount of strings to match (0 means all of them)");
 	r_config_lock (cfg, true);
 }
 
