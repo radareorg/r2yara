@@ -266,7 +266,6 @@ static int cmd_yara_show(R2Yara *r2yara, const char * name) {
 		}
 #endif
 	}
-
 	return true;
 }
 
@@ -567,37 +566,39 @@ static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
 		break;
 	case 's':
 		{
-          char *s;
-          if (input[1]) {
-            int len = r_num_math(r2yara->core->num, input + 1);
-            s = r_core_cmd_strf(r2yara->core, "psz %d", len);
-          } else {
-            s = r_core_cmd_str(r2yara->core, "psz");
-          }
-          r_list_append(r2yara->genstrings, yarastring(s));
-        } break;
-        case '-':
-          if (input && input[1] == '*') {
-            r_list_free(r2yara->genstrings);
-            r2yara->genstrings = r_list_newf(free);
-          } else {
-            char *s = r_list_pop(r2yara->genstrings);
-            free(s);
-          }
-          break;
-        case 'x': {
-          char *s;
-          if (input[1]) {
-            int len = r_num_math(r2yara->core->num, input + 1);
-            s = r_core_cmd_strf(r2yara->core, "pcy %d", len);
-          } else {
-            s = r_core_cmd_str(r2yara->core, "pcy");
-          }
-          r_str_trim(s);
-          r_list_append(r2yara->genstrings, s);
-        } break;
-        }
-        return 0;
+			char *s;
+			if (input[1]) {
+				int len = (int)r_num_math (r2yara->core->num, input + 1);
+				s = r_core_cmd_strf (r2yara->core, "psz %d", len);
+			} else {
+				s = r_core_cmd_str (r2yara->core, "psz");
+			}
+			r_list_append (r2yara->genstrings, yarastring (s));
+		}
+		break;
+	case '-':
+		if (input && input[1] == '*') {
+			r_list_free (r2yara->genstrings);
+			r2yara->genstrings = r_list_newf (free);
+		} else {
+			free (r_list_pop (r2yara->genstrings));
+		}
+		break;
+	case 'x':
+		{
+			char *s;
+			if (input[1]) {
+				int len = r_num_math (r2yara->core->num, input + 1);
+				s = r_core_cmd_strf (r2yara->core, "pcy %d", len);
+			} else {
+				s = r_core_cmd_str (r2yara->core, "pcy");
+			}
+			r_str_trim (s);
+			r_list_append (r2yara->genstrings, s);
+		}
+		break;
+	}
+	return 0;
 }
 
 static bool cmd_yara_add(R2Yara *r2yara, const char* input) {
@@ -801,14 +802,12 @@ err_exit:
 	return false;
 }
 
+// Move to r_sys_time_ymd?
 static char *yyyymmdd(void) {
 	time_t current_time;
-	struct tm *time_info;
 	char *ds = calloc (16, 1);
-
 	time (&current_time);
-	time_info = localtime (&current_time);
-
+	struct tm *time_info = localtime (&current_time);
 	strftime (ds, 16, "%Y-%m-%d", time_info);
 	return ds;
 }
