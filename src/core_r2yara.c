@@ -869,6 +869,36 @@ static char *yyyymmdd(void) {
 	return ds;
 }
 
+static bool yara_in_callback(void *user, void *data) {
+	RCore *core = (RCore*)user;
+	RConfigNode *node = (RConfigNode*) data;
+	if (*node->value == '?') {
+		r_cons_printf (
+			"range              search between .from/.to boundaries\n"
+			"flag               find boundaries in ranges defined by flags larger than 1 byte\n"
+			"flag:[glob]        find boundaries in flags matching given glob and larger than 1 byte\n"
+			"block              search in the current block\n"
+			"io.map             search in current map\n"
+			"io.maps            search in all maps\n"
+			"io.maps.[rwx]      search in all r-w-x io maps\n"
+			"bin.segment        search in current mapped segment\n"
+			"bin.segments       search in all mapped segments\n"
+			"bin.segments.[rwx] search in all r-w-x segments\n"
+			"bin.section        search in current mapped section\n"
+			"bin.sections       search in all mapped sections\n"
+			"bin.sections.[rwx] search in all r-w-x sections\n"
+			"dbg.stack          search in the stack\n"
+			"dbg.heap           search in the heap\n"
+			"dbg.map            search in current memory map\n"
+			"dbg.maps           search in all memory maps\n"
+			"dbg.maps.[rwx]     search in all executable marked memory maps\n"
+			"anal.fcn           search in the current function\n"
+			"anal.bb            search in the current basic-block\n");
+		return false;
+	}
+	return true;
+}
+
 static void setup_config(R2Yara *r2yara) {
 	RConfig *cfg = r2yara->core->config;
 	RConfigNode *node = NULL;
@@ -893,7 +923,7 @@ static void setup_config(R2Yara *r2yara) {
 	r_config_node_desc (node, "Amount of strings to match (0 means all of them)");
 	node = r_config_set_b (cfg, "yara.va", true);
 	r_config_node_desc (node, "Show results in virtual or physical addresses, overrides io.va");
-	node = r_config_set (cfg, "yara.in", "io.map");
+	node = r_config_set_cb (cfg, "yara.in", "io.map", yara_in_callback);
 	r_config_node_desc (node, "Where to scan for matches (see yara.in=? for help)");
 	r_config_lock (cfg, true);
 }
