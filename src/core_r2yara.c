@@ -81,6 +81,7 @@ typedef struct {
 	bool iova; // true
 	RList* rules_list;
 	RList *genstrings;
+	ut64 map_addr;
 	RCore *core;
 } R2Yara;
 
@@ -151,7 +152,7 @@ static int callback(YR_SCAN_CONTEXT* context, int message, void *msg_data, void 
 	RPrint *print = core->print;
 	st64 offset = 0;
 	ut64 n = 0;
-
+	ut64 map_addr = r2yara->map_addr;
 	R2YR_RULE* rule = msg_data;
 
 #if USE_YARAX
@@ -163,20 +164,28 @@ static int callback(YR_SCAN_CONTEXT* context, int message, void *msg_data, void 
 		yr_rule_strings_foreach (rule, string) {
 			YR_MATCH* match;
 			yr_string_matches_foreach (context, string, match) {
-				n = match->base + match->offset;
+				n = map_addr + match->base + match->offset;
 				// Find virtual address if needed
-				if (r2yara->iova) {
+				if (!r2yara->iova) {
+					RIOMap *map = r_io_map_get_at (core->io, n);
+					if (map) {
+						n -= r_io_map_begin (map) - map->delta;
+					}
+#if 0
 					RIOMap *map = r_io_map_get_paddr (core->io, n);
 					if (map) {
-						offset = r_io_map_begin (map) - map->delta;
+						// offset = r_io_map_begin (map) - map->delta;
+						n -= r_io_map_begin (map) + map->delta;
+						// n = r_io_map_begin (map) - map->delta;
 					}
+#endif
 				}
 				r_strf_var (flag, 256, "yara%d.%s_%d", r2yara->flagidx, rule->identifier, ruleidx);
 				if (r2yara->print_strings) {
-					r_cons_printf ("0x%08" PFMT64x ": %s : ", n + offset, flag);
+					r_cons_printf ("0x%08" PFMT64x ": %s : ", n, flag);
 					r_print_bytes (print, match->data, match->data_length, "%02x");
 				}
-				r_flag_set (core->flags, flag, n + offset, match->data_length);
+				r_flag_set (core->flags, flag, n, match->data_length);
 				ruleidx++;
 			}
 		}
@@ -194,42 +203,9 @@ static void compiler_callback(int error_level, const char* file_name,
 }
 #endif
 
-static int cmd_yara_scan(R2Yara *r2yara, R_NULLABLE const char* option) {
-	RCore *core = r2yara->core;
+static bool yr_scan(R2Yara *r2yara, void *to_scan, size_t to_scan_size) {
 	RListIter* rules_it;
 	R2YR_RULES* rules;
-
-	r_flag_space_push (core->flags, "yara");
-	const size_t to_scan_size = r_io_size (core->io);
-	r2yara->iova = r_config_get_b (core->config, "io.va");
-
-	if (to_scan_size < 1) {
-		R_LOG_ERROR ("Invalid file size");
-		return false;
-	}
-
-	r2yara->print_strings = true;
-	if (option != NULL) {
-		if (*option == 'q') {
-			r2yara->print_strings = false;
-		} else {
-			R_LOG_ERROR ("Invalid option");
-			return false;
-		}
-	}
-
-	void* to_scan = malloc (to_scan_size);
-	if (!to_scan) {
-		R_LOG_ERROR ("Something went wrong during memory allocation");
-		return false;
-	}
-
-	int result = r_io_pread_at (core->io, 0L, to_scan, to_scan_size);
-	if (!result) {
-		R_LOG_ERROR ("Something went wrong during r_io_read_at");
-		free (to_scan);
-		return false;
-	}
 #if USE_YARAX
 	YRX_SCANNER *scanner = NULL;
 	r_list_foreach (r2yara->rules_list, rules_it, rules) {
@@ -244,9 +220,90 @@ static int cmd_yara_scan(R2Yara *r2yara, R_NULLABLE const char* option) {
 		yr_rules_scan_mem (rules, to_scan, to_scan_size, 0, callback, (void*)r2yara, 0);
 	}
 #endif
-	free (to_scan);
-
 	return true;
+}
+
+static bool yr_vscan(R2Yara *r2yara, ut64 from, int to_scan_size) {
+	eprintf ("-> 0x%"PFMT64x" + %d\n", from, to_scan_size);
+	RCore *core = r2yara->core;
+	if (to_scan_size < 1) {
+		R_LOG_ERROR ("Invalid file size");
+		return false;
+	}
+	void* to_scan = malloc (to_scan_size);
+	if (!to_scan) {
+		R_LOG_ERROR ("Something went wrong during memory allocation");
+		return false;
+	}
+	int result = r_io_read_at (core->io, from, to_scan, to_scan_size);
+	if (!result) {
+		R_LOG_ERROR ("Something went wrong during r_io_read_at");
+		free (to_scan);
+		return false;
+	}
+	bool res = yr_scan (r2yara, to_scan, to_scan_size);
+	free (to_scan);
+	return res;
+}
+
+static bool yr_pscan(R2Yara *r2yara) {
+	RCore *core = r2yara->core;
+	const size_t to_scan_size = r_io_size (core->io);
+	if (to_scan_size < 1) {
+		R_LOG_ERROR ("Invalid file size");
+		return false;
+	}
+	void* to_scan = malloc (to_scan_size);
+	if (!to_scan) {
+		R_LOG_ERROR ("Something went wrong during memory allocation");
+		return false;
+	}
+	int result = r_io_pread_at (core->io, 0L, to_scan, to_scan_size);
+	if (!result) {
+		R_LOG_ERROR ("Something went wrong during r_io_read_at");
+		free (to_scan);
+		return false;
+	}
+	bool res = yr_scan (r2yara, to_scan, to_scan_size);
+	free (to_scan);
+	return res;
+}
+
+static int cmd_yara_scan(R2Yara *r2yara, R_NULLABLE const char* option) {
+	RCore *core = r2yara->core;
+ 
+	const char *yara_in = r_config_get (core->config, "yara.in");
+	RList *ranges = r_core_get_boundaries_prot (core, 0, yara_in, NULL);
+	RListIter *iter;
+	RIOMap *range;
+	r_flag_space_push (core->flags, "yara");
+	r2yara->iova = r_config_get_b (core->config, "yara.va");
+#if 0
+	if (r2yara->iova) {
+		r2yara->iova = r_config_get_b (core->config, "io.va");
+	}
+#endif
+	r2yara->print_strings = true;
+	if (option != NULL) {
+		if (*option == 'q') {
+			r2yara->print_strings = false;
+		} else {
+			R_LOG_ERROR ("Invalid option");
+			return false;
+		}
+	}
+	r2yara->map_addr = 0;
+	if (!r_list_empty (ranges)) {
+		r_list_foreach (ranges, iter, range) {
+			ut64 begin = r_io_map_begin (range);
+			ut64 end = r_io_map_end (range);
+			ut64 size = end - begin;
+			r2yara->map_addr = begin;
+			yr_vscan (r2yara, begin, (int)size);
+		}
+		return true;
+	}
+	return yr_pscan (r2yara);
 }
 
 static int cmd_yara_show(R2Yara *r2yara, const char * name) {
@@ -834,6 +891,10 @@ static void setup_config(R2Yara *r2yara) {
 	r_config_node_desc (node, "YARA rule tags");
 	node = r_config_set_i (cfg, "yara.amount", 0);
 	r_config_node_desc (node, "Amount of strings to match (0 means all of them)");
+	node = r_config_set_b (cfg, "yara.va", true);
+	r_config_node_desc (node, "Show results in virtual or physical addresses, overrides io.va");
+	node = r_config_set (cfg, "yara.in", "io.map");
+	r_config_node_desc (node, "Where to scan for matches (see yara.in=? for help)");
 	r_config_lock (cfg, true);
 }
 
