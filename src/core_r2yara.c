@@ -1008,6 +1008,9 @@ RCorePlugin r_core_plugin_yara = {
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_CORE,
 	.data = &r_core_plugin_yara,
+#if R2_VERSION_NUMBER >= 50909
+	.abi_version = R_LIB_CURRENT_ABI_VERSION,
+#endif
         .version = R2_VERSION
 };
 #endif
