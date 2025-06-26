@@ -22,6 +22,12 @@
 #define R2YR_RULE_STRINGS_FOREACH yr_rule_strings_foreach
 #endif
 
+#if R2_VERSION_NUMBER >= 50909
+#define R2_PRINTF(...) r_cons_printf(r2yara->core->cons, __VA_ARGS__)
+#else
+#define R2_PRINTF(...) r_cons_printf(__VA_ARGS__)
+#endif
+
 const char *short_help_message_yrg[] = {
 	"Usage: yrg", "[action] [args..]", " load and run yara rules inside r2",
 	"yrg-", "", "delete last pattern added to the yara rule",
@@ -111,7 +117,7 @@ static int callback(int message, void *msg_data, void *user_data) {
 
 	if (message == CALLBACK_MSG_RULE_MATCHING) {
 		YR_STRING* string;
-		r_cons_printf ("%s\n", rule->identifier);
+		R2_PRINTF ("%s\n", rule->identifier);
 		ruleidx = 0;
 		yr_rule_strings_foreach (rule, string) {
 			R2YR_MATCH* match;
@@ -159,7 +165,7 @@ static int callback(YR_SCAN_CONTEXT* context, int message, void *msg_data, void 
 #else
 	if (message == CALLBACK_MSG_RULE_MATCHING) {
 		YR_STRING* string;
-		r_cons_printf ("%s\n", rule->identifier);
+		R2_PRINTF ("%s\n", rule->identifier);
 		unsigned int ruleidx = 0;
 		yr_rule_strings_foreach (rule, string) {
 			YR_MATCH* match;
@@ -182,8 +188,12 @@ static int callback(YR_SCAN_CONTEXT* context, int message, void *msg_data, void 
 				}
 				r_strf_var (flag, 256, "yara%d.%s_%d", r2yara->flagidx, rule->identifier, ruleidx);
 				if (r2yara->print_strings) {
-					r_cons_printf ("0x%08" PFMT64x ": %s : ", n, flag);
+					R2_PRINTF ("0x%08" PFMT64x ": %s : ", n, flag);
+#if R2_VERSION_NUMBER >= 50909
+					r_print_bytes (print, match->data, match->data_length, "%02x", 0);
+#else
 					r_print_bytes (print, match->data, match->data_length, "%02x");
+#endif
 				}
 				r_flag_set (core->flags, flag, n, match->data_length);
 				ruleidx++;
@@ -269,7 +279,7 @@ static bool yr_pscan(R2Yara *r2yara) {
 	return res;
 }
 
-static int cmd_yara_scan(R2Yara *r2yara, R_NULLABLE const char* option) {
+static int cmd_yara_scan(R2Yara *r2yara, const char* R_NULLABLE option) {
 	RCore *core = r2yara->core;
  
 	const char *yara_in = r_config_get (core->config, "yara.in");
@@ -318,7 +328,7 @@ static int cmd_yara_show(R2Yara *r2yara, const char * name) {
 #else
 		yr_rules_foreach (rules, rule) {
 			if (r_str_casestr (rule->identifier, name)) {
-				r_cons_printf ("%s\n", rule->identifier);
+				R2_PRINTF ("%s\n", rule->identifier);
 			}
 		}
 #endif
@@ -350,9 +360,9 @@ static int cmd_yara_tags(R2Yara *r2yara) {
 #endif
 	}
 
-	r_cons_printf ("[YARA tags]\n");
+	R2_PRINTF ("[YARA tags]\n");
 	r_list_foreach (tag_list, tags_it, tag_name) {
-		r_cons_printf ("%s\n", tag_name);
+		R2_PRINTF ("%s\n", tag_name);
 	}
 
 	r_list_free (tag_list);
@@ -374,7 +384,7 @@ static int cmd_yara_tag(R2Yara *r2yara, const char * search_tag) {
 			yr_rule_tags_foreach (rule, tag_name) {
 				R_LOG_WARN ("Invalid option");
 				if (search_tag && r_str_casestr (tag_name, search_tag)) {
-					r_cons_println (rule->identifier);
+					R2_PRINTF ("%s\n", rule->identifier);
 					break;
 				}
 			}
@@ -395,7 +405,7 @@ static int cmd_yara_list(R2Yara *r2yara) {
 	R2YR_RULE* rule;
 	r_list_foreach (r2yara->rules_list, rules_it, rules) {
 		yr_rules_foreach (rules, rule) {
-			r_cons_printf ("%s\n", rule->identifier);
+			R2_PRINTF ("%s\n", rule->identifier);
 		}
 	}
 #endif
@@ -410,7 +420,7 @@ static int cmd_yara_clear(R2Yara *r2yara) {
 	return 0;
 }
 
-static void logerr(R2YR_COMPILER* compiler, R_NULLABLE const char *arg) {
+static void logerr(R2YR_COMPILER* compiler, const char * R_NULLABLE arg) {
 #if USE_YARAX
 	R_LOG_ERROR ("log error %s", arg);
 #else
@@ -515,7 +525,7 @@ static RStrBuf *get_current_rule(R2Yara *r2yara) {
 }
 
 static void cmd_yara_gen_show(R2Yara *r2yara) {
-	r_cons_printf("%s", r_strbuf_tostring(get_current_rule(r2yara)));
+	R2_PRINTF ("%s", r_strbuf_tostring (get_current_rule (r2yara)));
 }
 
 static void cmd_yara_add_current(R2Yara *r2yara) {
@@ -676,13 +686,13 @@ static bool cmd_yara_add(R2Yara *r2yara, const char* input) {
 }
 
 static int cmd_yara_version(R2Yara *r2yara) {
-	r_cons_printf ("r2 %s\n", R2_VERSION);
+	R2_PRINTF ("r2 %s\n", R2_VERSION);
 #if USE_YARAX
-	r_cons_printf ("yarax git\n");
+	R2_PRINTF ("yarax git\n");
 #else
-	r_cons_printf ("yara %s\n", YR_VERSION);
+	R2_PRINTF ("yara %s\n", YR_VERSION);
 #endif
-	r_cons_printf ("r2yara %s\n", R2Y_VERSION);
+	R2_PRINTF ("r2yara %s\n", R2Y_VERSION);
 	return 0;
 }
 
@@ -873,7 +883,11 @@ static bool yara_in_callback(void *user, void *data) {
 	RCore *core = (RCore*)user;
 	RConfigNode *node = (RConfigNode*) data;
 	if (*node->value == '?') {
+#if R2_VERSION_NUMBER >= 50909
+		r_cons_printf (core->cons,
+#else
 		r_cons_printf (
+#endif
 			"range              search between .from/.to boundaries\n"
 			"flag               find boundaries in ranges defined by flags larger than 1 byte\n"
 			"flag:[glob]        find boundaries in flags matching given glob and larger than 1 byte\n"
