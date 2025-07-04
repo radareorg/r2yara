@@ -91,9 +91,9 @@ typedef struct {
 	RCore *core;
 } R2Yara;
 
-// RCorePlugins have no session yet // R2_600
-// TODO: remove globals when r2-6.0.0 ships RCoreSession
+#if R2_VERSION_NUMBER < 50909
 static R_TH_LOCAL R2Yara Gr2yara = {0};
+#endif
 
 /* Because of how the rules are compiled, we are not allowed to add more
  * rules to a compiler once it has compiled. That's why we keep a list
@@ -942,6 +942,26 @@ static void setup_config(R2Yara *r2yara) {
 	r_config_lock (cfg, true);
 }
 
+#if R2_VERSION_NUMBER >= 50909
+static bool cmd_yara_init(RCorePluginSession *cps) {
+	RCore *core = cps->core;
+	R2Yara *r2yara = R_NEW0 (R2Yara);
+	r2yara->iova = true;
+	r2yara->core = core;
+	r2yara->rules_list = r_list_newf ((RListFree) R2YR_RULES_DESTROY);
+	r2yara->genstrings = r_list_newf (free);
+#if !USE_YARAX
+	yr_initialize ();
+#endif
+	setup_config (r2yara);
+
+	cmd_yara_load_default_rules (r2yara);
+	r2yara->initialized = true;
+	r2yara->flagidx = 0;
+	cps->data = r2yara;
+	return true;
+}
+#else
 static int cmd_yara_init(void *user, const char *cmd) {
 	RCmd *rcmd = (RCmd *)user;
 	RCore* core = (RCore *)rcmd->data;
@@ -962,11 +982,9 @@ static int cmd_yara_init(void *user, const char *cmd) {
 	r2yara->flagidx = 0;
 	return true;
 }
+#endif
 
-static int cmd_yara_call(void *user, const char *input) {
-	RCmd *rcmd = (RCmd *)user;
-	RCore* core = (RCore *)rcmd->data;
-	R2Yara *r2yara = &Gr2yara;
+static bool yaracall(R2Yara *r2yara, const char *input) {
 	if (r_str_startswith (input, "yr")) {
 		cmd_yr (r2yara, input + 2);
 		return true;
@@ -974,16 +992,50 @@ static int cmd_yara_call(void *user, const char *input) {
 	if (!r_str_startswith (input, "yara")) {
 		return false;
 	}
+#if R2_VERSION_NUMBER < 50909
 	if (!r2yara->initialized) {
 		if (!cmd_yara_init (r2yara, NULL)) {
 			return false;
 		}
 	}
+#endif
 	const char *args = input[4]? input + 5: input + 4;
 	cmd_yara_process (r2yara, args);
 	return true;
 }
 
+#if R2_VERSION_NUMBER >= 50909
+static bool cmd_yara_call(RCorePluginSession *cps, const char *input) {
+	RCore* core = cps->core;
+	R2Yara *r2yara = cps->data;
+	return yaracall (r2yara, input);
+}
+#else
+static int cmd_yara_call(void *user, const char *input) {
+	RCmd *rcmd = (RCmd *)user;
+	RCore* core = (RCore *)rcmd->data;
+	R2Yara *r2yara = &Gr2yara;
+	r2yara->core = core;
+	return yaracall (r2yara, input);
+}
+#endif
+
+#if R2_VERSION_NUMBER >= 50909
+static bool cmd_yara_fini(RCorePluginSession *cps) {
+	// RCore* core = cps->core;
+	R2Yara *r2yara = cps->data;
+	if (r2yara->initialized) {
+		r_list_free (r2yara->rules_list);
+		r_list_free (r2yara->genstrings);
+#if !USE_YARAX
+		yr_finalize ();
+#endif
+		r2yara->initialized = false;
+	}
+	free (cps->data);
+	return true;
+}
+#else
 static int cmd_yara_fini(void *user, const char *cmd) {
 	RCmd *rcmd = (RCmd *)user;
 	RCore* core = (RCore *)rcmd->data;
@@ -998,6 +1050,7 @@ static int cmd_yara_fini(void *user, const char *cmd) {
 	}
 	return true;
 }
+#endif
 
 RCorePlugin r_core_plugin_yara = {
 #if R2_VERSION_NUMBER < 50809
@@ -1013,9 +1066,15 @@ RCorePlugin r_core_plugin_yara = {
 		.version = R2Y_VERSION,
 	},
 #endif
+#if R2_VERSION_NUMBER >= 50909
 	.call = cmd_yara_call,
 	.init = cmd_yara_init,
 	.fini = cmd_yara_fini
+#else
+	.call = cmd_yara_call,
+	.init = cmd_yara_init,
+	.fini = cmd_yara_fini
+#endif
 };
 
 #ifndef CORELIB
