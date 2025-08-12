@@ -15,6 +15,25 @@ r2yara can be installed with `r2pm` tool running this command:
 r2pm -ci r2yara
 ```
 
+## Cargo Build (Rust-only)
+
+You can build the `core_yara` plugin with Cargo, linking against the bundled YARA‑X C API, with no Make or Meson involved.
+
+- Prereqs: radare2 headers and libs installed (override with `R2_INCLUDE`/`R2_LIBDIR`), Rust toolchain, and the vendored `yara-x/` directory present (already in this repo).
+- Build:
+  - Release: `cargo build -p core-r2yara --release`
+  - Debug: `cargo build -p core-r2yara`
+
+This produces `target/<profile>/libcore_r2yara.{dylib,so,dll}`. Copy/rename to your r2 plugins directory without the `lib` prefix, for example on macOS:
+
+```
+cp target/release/libcore_r2yara.dylib ~/.local/share/radare2/plugins/core_r2yara.dylib
+```
+
+Notes:
+- The Cargo build defines `USE_YARAX=1`, includes headers from `yara-x/capi/include`, and depends on the local `yara-x-capi` crate for symbols.
+- If `pkg-config` finds `r_core` it provides link flags and include paths; otherwise defaults are used. You can override with `R2_INCLUDE` and `R2_LIBDIR` env vars. On Linux, `-ldl` is linked automatically.
+
 ## Documentation
 
 After installation, you will get the `yr` command inside `radare2` shell
