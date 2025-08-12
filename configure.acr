@@ -1,5 +1,5 @@
 PKGNAME r2yara
-VERSION 1.4.2
+VERSION 1.4.4
 DESCRIPTION yara plugin for radare2 ;
 CONTACT jfrankowski ; judy.frankowski@gmail.com
 
