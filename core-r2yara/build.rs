@@ -1,5 +1,7 @@
 use std::env;
-use std::path::PathBuf;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 fn main() {
     // Rebuild if the C plugin or headers change
@@ -10,15 +12,8 @@ fn main() {
     let r2_include = env::var("R2_INCLUDE").ok().unwrap_or_else(|| "/usr/local/include/libr".to_string());
     let r2_libdir = env::var("R2_LIBDIR").ok().unwrap_or_else(|| "/usr/local/lib".to_string());
 
-    // Try to use pkg-config if available to locate r2 libs; fall back to common defaults
-    let mut have_pkg = false;
-    let pkg = match pkg_config::Config::new().env_metadata(true).probe("r_core") {
-        Ok(p) => {
-            have_pkg = true;
-            Some(p)
-        }
-        Err(_) => None,
-    };
+    // No pkg-config crate: rely on R2_LIBDIR fallback
+    let have_pkg = false;
 
     // Link against radare2 libraries (order matches config.mk)
     let r2_libs = [
@@ -58,37 +53,72 @@ fn main() {
         }
     }
 
-    // Include paths for compiling the C plugin
-    let mut cc_build = cc::Build::new();
-    cc_build
-        .file("../src/core_r2yara.c")
-        .include(&r2_include)
-        .include("../yara-x/capi/include")
-        .define("USE_YARAX", Some("1"))
-        .define("R2Y_VERSION", Some(env!("CARGO_PKG_VERSION")))
-        .flag_if_supported("-fPIC");
-    if let Some(p) = &pkg {
-        for ip in &p.include_paths {
-            cc_build.include(ip);
-        }
-    }
-
-    // Allow extra CFLAGS from env if the user needs custom tweaks
-    if let Ok(extra) = env::var("EXTRA_CFLAGS") {
-        for tok in extra.split_whitespace() {
-            cc_build.flag(tok);
-        }
-    }
-
     // Compile C code into a static library that will be linked into this cdylib
-    cc_build.compile("r2yara_c");
-
-    // Nothing else needed for YARA-X linking: depending on `yara-x-capi`
-    // ensures its Rust objects (providing the `yrx_*` C symbols) are linked
-    // into the final cdylib to satisfy references from the C object.
-
-    // For convenience, print where Cargo will place the final artifact
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-    println!("cargo:warning=core_r2yara will be built as a cdylib; find it under target/<profile>/");
-    println!("cargo:warning=OUT_DIR={} (intermediate)", out_dir.display());
+    let c_src = Path::new("../src/core_r2yara.c");
+    let obj = out_dir.join("core_r2yara.o");
+    let staticlib = out_dir.join("libr2yara_c.a");
+
+    let cc = env::var("CC").unwrap_or_else(|_| "cc".to_string());
+    let mut cflags: Vec<String> = vec![
+        "-fPIC".into(),
+        "-I".into(), r2_include.clone(),
+        "-I".into(), "../yara-x/capi/include".into(),
+        "-DUSE_YARAX=1".into(),
+        "-c".into(),
+    ];
+    if let Ok(extra) = env::var("EXTRA_CFLAGS") {
+        cflags.extend(extra.split_whitespace().map(|s| s.to_string()));
+    }
+    // R2Y_VERSION define
+    cflags.push(format!("-DR2Y_VERSION=\"{}\"", env!("CARGO_PKG_VERSION")));
+    cflags.push(c_src.to_string_lossy().to_string());
+    cflags.push("-o".into());
+    cflags.push(obj.to_string_lossy().to_string());
+
+    let status = Command::new(&cc)
+        .args(cflags.iter())
+        .status()
+        .expect("failed to spawn C compiler");
+    if !status.success() {
+        panic!("C compilation failed: {:?} {:?}", cc, cflags);
+    }
+
+    // Create static archive from the object file
+    let ar = env::var("AR").unwrap_or_else(|_| "ar".to_string());
+    if staticlib.exists() {
+        let _ = fs::remove_file(&staticlib);
+    }
+    let status = Command::new(&ar)
+        .args(["crus", staticlib.to_str().unwrap(), obj.to_str().unwrap()])
+        .status()
+        .expect("failed to spawn ar");
+    if !status.success() {
+        panic!("ar failed to create static lib");
+    }
+
+    println!("cargo:rustc-link-search=native={}", out_dir.display());
+    println!("cargo:rustc-link-lib=static=r2yara_c");
+
+    // Link with prebuilt YARA-X C API if present.
+    let yx_libdir = Path::new("../yara-x/target/release");
+    let yx_static = yx_libdir.join("libyara_x_capi.a");
+    if yx_static.exists() {
+        println!("cargo:rustc-link-search=native={}", yx_libdir.display());
+        println!("cargo:rustc-link-lib=static=yara_x_capi");
+    } else {
+        println!("cargo:warning=Missing YARA-X C API static lib at {}", yx_static.display());
+        println!("cargo:warning=Build it with: (cd yara-x/capi && cargo build -r)");
+        // Try to link dynamically if available
+        let yx_dylib = yx_libdir.join(if cfg!(target_os = "macos") { "libyara_x_capi.dylib" } else if cfg!(target_os = "windows") { "yara_x_capi.dll" } else { "libyara_x_capi.so" });
+        if yx_dylib.exists() {
+            println!("cargo:rustc-link-search=native={}", yx_libdir.display());
+            println!("cargo:rustc-link-lib=dylib=yara_x_capi");
+        } else {
+            panic!("YARA-X C API library not found; please build yara-x/capi first");
+        }
+    }
+
+    // For convenience, print where Cargo places artifacts
+    println!("cargo:warning=core_r2yara built as cdylib under target/<profile>/");
 }

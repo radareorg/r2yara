@@ -10,10 +10,5 @@ name = "core_r2yara"
 crate-type = ["cdylib"]
 
 [dependencies]
-# Depend on the local YARA-X C API crate. This ensures its symbols are linked.
-yara-x-capi = { path = "../yara-x/capi" }
 
 [build-dependencies]
-cc = "1"
-pkg-config = "0.3"
-
