@@ -8,6 +8,10 @@ fn main() {
     println!("cargo:rerun-if-changed=../src/core_r2yara.c");
     println!("cargo:rerun-if-changed=../yara-x/capi/include/yara_x.h");
 
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    let project_root = manifest_dir.parent().unwrap();
+    let yara_x_include_path = project_root.join("yara-x/capi/include");
+
     let mut r2_cflags: Vec<String> = vec![];
     match pkg_config::probe_library("r_core") {
         Ok(lib) => {
@@ -55,7 +59,7 @@ fn main() {
     let mut cflags: Vec<String> = vec![
         "-fPIC".into(),
         "-I".into(),
-        "../yara-x/capi/include".into(),
+        yara_x_include_path.to_string_lossy().to_string(),
         "-DUSE_YARAX=1".into(),
         "-c".into(),
     ];
@@ -99,7 +103,7 @@ fn main() {
     println!("cargo:rustc-link-lib=static=r2yara_c");
 
     // Link with prebuilt YARA-X C API if present.
-    let yx_libdir = Path::new("../yara-x/target/release");
+    let yx_libdir = project_root.join("yara-x/target/release");
     let yx_static = yx_libdir.join("libyara_x_capi.a");
     if yx_static.exists() {
         println!("cargo:rustc-link-search=native={}", yx_libdir.display());
