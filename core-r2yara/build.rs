@@ -8,48 +8,40 @@ fn main() {
     println!("cargo:rerun-if-changed=../src/core_r2yara.c");
     println!("cargo:rerun-if-changed=../yara-x/capi/include/yara_x.h");
 
-    // Resolve radare2 include dir and lib dir
-    let r2_include = env::var("R2_INCLUDE").ok().unwrap_or_else(|| "/usr/local/include/libr".to_string());
-    let r2_libdir = env::var("R2_LIBDIR").ok().unwrap_or_else(|| "/usr/local/lib".to_string());
-
-    // No pkg-config crate: rely on R2_LIBDIR fallback
-    let have_pkg = false;
-
-    // Link against radare2 libraries (order matches config.mk)
-    let r2_libs = [
-        "r_core",
-        "r_config",
-        "r_debug",
-        "r_bin",
-        "r_lang",
-        "r_anal",
-        "r_bp",
-        "r_egg",
-        "r_asm",
-        "r_arch",
-        "r_esil",
-        "r_flag",
-        "r_reg",
-        "r_search",
-        "r_syscall",
-        "r_fs",
-        "r_io",
-        "r_socket",
-        "r_cons",
-        "r_magic",
-        "r_muta",
-        "r_util",
-    ];
-
-    if !have_pkg {
-        // Fallback: manual link search path + libs
-        println!("cargo:rustc-link-search=native={}", r2_libdir);
-        for lib in r2_libs.iter() {
-            println!("cargo:rustc-link-lib={}", lib);
+    let mut r2_cflags: Vec<String> = vec![];
+    match pkg_config::probe_library("r_core") {
+        Ok(lib) => {
+            for path in lib.include_paths {
+                r2_cflags.push("-I".to_string());
+                r2_cflags.push(path.to_string_lossy().to_string());
+            }
         }
-        // Some platforms need libdl
-        if cfg!(target_os = "linux") {
-            println!("cargo:rustc-link-lib=dl");
+        Err(_) => {
+            // Resolve radare2 include dir and lib dir
+            let r2_include = env::var("R2_INCLUDE")
+                .ok()
+                .unwrap_or_else(|| "/usr/local/include/libr".to_string());
+            let r2_libdir = env::var("R2_LIBDIR")
+                .ok()
+                .unwrap_or_else(|| "/usr/local/lib".to_string());
+            r2_cflags.push("-I".to_string());
+            r2_cflags.push(r2_include.clone());
+
+            // Link against radare2 libraries (order matches config.mk)
+            let r2_libs = [
+                "r_core", "r_config", "r_debug", "r_bin", "r_lang", "r_anal", "r_bp", "r_egg",
+                "r_asm", "r_arch", "r_esil", "r_flag", "r_reg", "r_search", "r_syscall", "r_fs",
+                "r_io", "r_socket", "r_cons", "r_magic", "r_muta", "r_util",
+            ];
+            // Fallback: manual link search path + libs
+            println!("cargo:rustc-link-search=native={}", r2_libdir);
+            for lib in r2_libs.iter() {
+                println!("cargo:rustc-link-lib={}", lib);
+            }
+            // Some platforms need libdl
+            if cfg!(target_os = "linux") {
+                println!("cargo:rustc-link-lib=dl");
+            }
         }
     }
 
@@ -62,16 +54,22 @@ fn main() {
     let cc = env::var("CC").unwrap_or_else(|_| "cc".to_string());
     let mut cflags: Vec<String> = vec![
         "-fPIC".into(),
-        "-I".into(), r2_include.clone(),
-        "-I".into(), "../yara-x/capi/include".into(),
+        "-I".into(),
+        "../yara-x/capi/include".into(),
         "-DUSE_YARAX=1".into(),
         "-c".into(),
     ];
+    for flag in r2_cflags {
+        cflags.push(flag);
+    }
     if let Ok(extra) = env::var("EXTRA_CFLAGS") {
         cflags.extend(extra.split_whitespace().map(|s| s.to_string()));
     }
     // R2Y_VERSION define
-    cflags.push(format!("-DR2Y_VERSION=\"{}\"", env!("CARGO_PKG_VERSION")));
+    cflags.push(format!(
+        "-DR2Y_VERSION=\"{}\"",
+        env!("CARGO_PKG_VERSION")
+    ));
     cflags.push(c_src.to_string_lossy().to_string());
     cflags.push("-o".into());
     cflags.push(obj.to_string_lossy().to_string());
@@ -107,10 +105,19 @@ fn main() {
         println!("cargo:rustc-link-search=native={}", yx_libdir.display());
         println!("cargo:rustc-link-lib=static=yara_x_capi");
     } else {
-        println!("cargo:warning=Missing YARA-X C API static lib at {}", yx_static.display());
+        println!(
+            "cargo:warning=Missing YARA-X C API static lib at {}",
+            yx_static.display()
+        );
         println!("cargo:warning=Build it with: (cd yara-x/capi && cargo build -r)");
         // Try to link dynamically if available
-        let yx_dylib = yx_libdir.join(if cfg!(target_os = "macos") { "libyara_x_capi.dylib" } else if cfg!(target_os = "windows") { "yara_x_capi.dll" } else { "libyara_x_capi.so" });
+        let yx_dylib = yx_libdir.join(if cfg!(target_os = "macos") {
+            "libyara_x_capi.dylib"
+        } else if cfg!(target_os = "windows") {
+            "yara_x_capi.dll"
+        } else {
+            "libyara_x_capi.so"
+        });
         if yx_dylib.exists() {
             println!("cargo:rustc-link-search=native={}", yx_libdir.display());
             println!("cargo:rustc-link-lib=dylib=yara_x_capi");
