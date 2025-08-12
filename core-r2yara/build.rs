@@ -10,7 +10,19 @@ fn main() {
 
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let project_root = manifest_dir.parent().unwrap();
-    let yara_x_include_path = project_root.join("yara-x/capi/include");
+    // Resolve YARA-X C API include directories (allow override via env)
+    let yara_x_include_env = env::var("YARAX_CAPI_INCLUDE")
+        .ok()
+        .or_else(|| env::var("YARAX_INCLUDE").ok());
+    let yara_x_include_default = project_root.join("yara-x/capi/include");
+    let yara_x_capi_root = project_root.join("yara-x/capi");
+    let mut yx_include_dirs: Vec<PathBuf> = vec![];
+    if let Some(inc) = yara_x_include_env {
+        yx_include_dirs.push(PathBuf::from(inc));
+    }
+    yx_include_dirs.push(yara_x_include_default.clone());
+    // Also add the capi root as a fallback search path in case headers are placed there.
+    yx_include_dirs.push(yara_x_capi_root.clone());
 
     let mut r2_cflags: Vec<String> = vec![];
     match pkg_config::probe_library("r_core") {
@@ -56,13 +68,12 @@ fn main() {
     let staticlib = out_dir.join("libr2yara_c.a");
 
     let cc = env::var("CC").unwrap_or_else(|_| "cc".to_string());
-    let mut cflags: Vec<String> = vec![
-        "-fPIC".into(),
-        "-I".into(),
-        yara_x_include_path.to_string_lossy().to_string(),
-        "-DUSE_YARAX=1".into(),
-        "-c".into(),
-    ];
+    let mut cflags: Vec<String> = vec!["-fPIC".into(), "-DUSE_YARAX=1".into(), "-c".into()];
+    // Add YARA-X include directories
+    for dir in &yx_include_dirs {
+        cflags.push("-I".into());
+        cflags.push(dir.to_string_lossy().to_string());
+    }
     for flag in r2_cflags {
         cflags.push(flag);
     }
@@ -105,6 +116,29 @@ fn main() {
     // Link with prebuilt YARA-X C API if present.
     let yx_libdir = project_root.join("yara-x/target/release");
     let yx_static = yx_libdir.join("libyara_x_capi.a");
+    if !yx_static.exists() {
+        // Attempt to build the YARA-X C API automatically if missing.
+        println!(
+            "cargo:warning=YARA-X C API static lib not found, attempting to build it"
+        );
+        let mut build_cmd = Command::new("cargo");
+        build_cmd.current_dir(yara_x_capi_root);
+        build_cmd.args(["build", "--release"]);
+        // Propagate a minimal env for cargo so it uses the same toolchain
+        if let Ok(status) = build_cmd.status() {
+            if !status.success() {
+                println!(
+                    "cargo:warning=Failed to auto-build yara-x/capi (status {}), will try dynamic link next",
+                    status
+                );
+            }
+        } else {
+            println!(
+                "cargo:warning=Failed to spawn cargo to build yara-x/capi; please build it manually"
+            );
+        }
+    }
+
     if yx_static.exists() {
         println!("cargo:rustc-link-search=native={}", yx_libdir.display());
         println!("cargo:rustc-link-lib=static=yara_x_capi");
