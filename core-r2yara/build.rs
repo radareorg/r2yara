@@ -6,23 +6,33 @@ use std::process::Command;
 fn main() {
     // Rebuild if the C plugin or headers change
     println!("cargo:rerun-if-changed=../src/core_r2yara.c");
-    println!("cargo:rerun-if-changed=../yara-x/capi/include/yara_x.h");
+    // Rebuild if env-provided include path changes (from yara-x-capi dep)
+    println!("cargo:rerun-if-env-changed=DEP_YARA_X_CAPI_INCLUDE");
+    println!("cargo:rerun-if-env-changed=YARAX_CAPI_INCLUDE");
 
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let project_root = manifest_dir.parent().unwrap();
-    // Resolve YARA-X C API include directories (allow override via env)
-    let yara_x_include_env = env::var("YARAX_CAPI_INCLUDE")
-        .ok()
-        .or_else(|| env::var("YARAX_INCLUDE").ok());
-    let yara_x_include_default = project_root.join("yara-x/capi/include");
-    let yara_x_capi_root = project_root.join("yara-x/capi");
+    // Resolve YARA-X C API include directory from dependency metadata or env.
+    // Prefer env overrides, then metadata exported by the yara-x-capi crate's build script.
+    // The crate should declare `links = "yara_x_capi"`, so Cargo will expose
+    // `DEP_YARA_X_CAPI_INCLUDE` (or at least `DEP_YARA_X_CAPI_ROOT`). We try both.
     let mut yx_include_dirs: Vec<PathBuf> = vec![];
-    if let Some(inc) = yara_x_include_env {
+    if let Ok(inc) = env::var("YARAX_CAPI_INCLUDE").or_else(|_| env::var("YARAX_INCLUDE")) {
         yx_include_dirs.push(PathBuf::from(inc));
     }
-    yx_include_dirs.push(yara_x_include_default.clone());
-    // Also add the capi root as a fallback search path in case headers are placed there.
-    yx_include_dirs.push(yara_x_capi_root.clone());
+    if let Ok(dep_inc) = env::var("DEP_YARA_X_CAPI_INCLUDE") {
+        yx_include_dirs.push(PathBuf::from(dep_inc));
+    }
+    if let Ok(dep_root) = env::var("DEP_YARA_X_CAPI_ROOT") {
+        yx_include_dirs.push(PathBuf::from(dep_root).join("include"));
+    }
+    // Fallbacks for inconsistent naming, just in case.
+    if let Ok(dep_inc) = env::var("DEP_YARAX_CAPI_INCLUDE") {
+        yx_include_dirs.push(PathBuf::from(dep_inc));
+    }
+    if let Ok(dep_root) = env::var("DEP_YARAX_CAPI_ROOT") {
+        yx_include_dirs.push(PathBuf::from(dep_root).join("include"));
+    }
 
     let mut r2_cflags: Vec<String> = vec![];
     match pkg_config::probe_library("r_core") {
@@ -113,55 +123,12 @@ fn main() {
     println!("cargo:rustc-link-search=native={}", out_dir.display());
     println!("cargo:rustc-link-lib=static=r2yara_c");
 
-    // Link with prebuilt YARA-X C API if present.
-    let yx_libdir = project_root.join("yara-x/target/release");
-    let yx_static = yx_libdir.join("libyara_x_capi.a");
-    if !yx_static.exists() {
-        // Attempt to build the YARA-X C API automatically if missing.
-        println!(
-            "cargo:warning=YARA-X C API static lib not found, attempting to build it"
-        );
-        let mut build_cmd = Command::new("cargo");
-        build_cmd.current_dir(yara_x_capi_root);
-        build_cmd.args(["build", "--release"]);
-        // Propagate a minimal env for cargo so it uses the same toolchain
-        if let Ok(status) = build_cmd.status() {
-            if !status.success() {
-                println!(
-                    "cargo:warning=Failed to auto-build yara-x/capi (status {}), will try dynamic link next",
-                    status
-                );
-            }
-        } else {
-            println!(
-                "cargo:warning=Failed to spawn cargo to build yara-x/capi; please build it manually"
-            );
-        }
-    }
-
-    if yx_static.exists() {
-        println!("cargo:rustc-link-search=native={}", yx_libdir.display());
-        println!("cargo:rustc-link-lib=static=yara_x_capi");
-    } else {
-        println!(
-            "cargo:warning=Missing YARA-X C API static lib at {}",
-            yx_static.display()
-        );
-        println!("cargo:warning=Build it with: (cd yara-x/capi && cargo build -r)");
-        // Try to link dynamically if available
-        let yx_dylib = yx_libdir.join(if cfg!(target_os = "macos") {
-            "libyara_x_capi.dylib"
-        } else if cfg!(target_os = "windows") {
-            "yara_x_capi.dll"
-        } else {
-            "libyara_x_capi.so"
-        });
-        if yx_dylib.exists() {
-            println!("cargo:rustc-link-search=native={}", yx_libdir.display());
-            println!("cargo:rustc-link-lib=dylib=yara_x_capi");
-        } else {
-            panic!("YARA-X C API library not found; please build yara-x/capi first");
-        }
+    // Linking to YARA-X C API is handled automatically by the `yara-x-capi`
+    // Rust dependency via its own build script. We only need headers for C.
+    // If no include dir was found, fail with a clear message.
+    if yx_include_dirs.is_empty() {
+        println!("cargo:warning=Could not determine YARA-X C API include directory");
+        println!("cargo:warning=Set YARAX_CAPI_INCLUDE env var to the directory containing yara_x.h");
     }
 
     // For convenience, print where Cargo places artifacts

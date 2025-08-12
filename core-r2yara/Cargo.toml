@@ -10,6 +10,7 @@ name = "core_r2yara"
 crate-type = ["cdylib"]
 
 [dependencies]
+yara-x = "1.5.0"
 
 [build-dependencies]
 pkg-config = "0.3.25"

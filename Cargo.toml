@@ -88,11 +88,13 @@ walrus = "0.23.3"
 wasmtime = { version = "34.0.2", default-features = false }
 x509-parser = "0.17.0"
 yansi = "1.0.1"
-yara-x = { path = "yara-x/lib", version = "1.5.0" }
-yara-x-fmt = { path = "yara-x/fmt", version = "1.5.0" }
-yara-x-macros = { path = "yara-x/macros", version = "1.5.0" }
-yara-x-parser = { path = "yara-x/parser", version = "1.5.0" }
-yara-x-proto = { path = "yara-x/proto", version = "1.5.0" }
-yara-x-proto-yaml = { path = "yara-x/proto-yaml", version = "1.5.0" }
-yara-x-proto-json = { path = "yara-x/proto-json", version = "1.5.0" }
+## Use crates.io published versions instead of a local checkout
+# If needed by members, uncomment and pin to the desired version.
+# yara-x = "1.5.0"
+# yara-x-fmt = "1.5.0"
+# yara-x-macros = "1.5.0"
+# yara-x-parser = "1.5.0"
+# yara-x-proto = "1.5.0"
+# yara-x-proto-yaml = "1.5.0"
+# yara-x-proto-json = "1.5.0"
 zip = "4.3.0"
