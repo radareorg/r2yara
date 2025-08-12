@@ -156,7 +156,6 @@ static int callback(YR_SCAN_CONTEXT* context, int message, void *msg_data, void 
 	R2Yara *r2yara = (R2Yara *)user_data;
 	RCore *core = r2yara->core;
 	RPrint *print = core->print;
-	st64 offset = 0;
 	ut64 n = 0;
 	ut64 map_addr = r2yara->map_addr;
 	R2YR_RULE* rule = msg_data;
@@ -670,7 +669,7 @@ static int cmd_yara_gen(R2Yara *r2yara, const char* input) {
 
 static bool cmd_yara_add(R2Yara *r2yara, const char* input) {
 	/* Add a rule with user input */
-	R2YR_COMPILER* compiler = NULL;
+	// R2YR_COMPILER* compiler = NULL;
 	int i;
 	if (!input) {
 		R_LOG_ERROR ("Missing argument");
@@ -784,7 +783,6 @@ static int cmd_yr(R2Yara *r2yara, const char *input) {
 }
 
 static int cmd_yara_load_default_rules(R2Yara *r2yara) {
-	RCore* core = r2yara->core;
 	RListIter* iter = NULL;
 	R2YR_COMPILER* compiler = NULL;
 	R2YR_RULES* yr_rules = NULL;
@@ -1006,7 +1004,6 @@ static bool yaracall(R2Yara *r2yara, const char *input) {
 
 #if R2_VERSION_NUMBER >= 50909
 static bool cmd_yara_call(RCorePluginSession *cps, const char *input) {
-	RCore* core = cps->core;
 	R2Yara *r2yara = cps->data;
 	return yaracall (r2yara, input);
 }
