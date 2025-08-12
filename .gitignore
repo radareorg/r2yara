@@ -148,3 +148,5 @@ libr/include/sdb
 # libFuzzer
 crash-*
 corpus*
+# Cargo
+target/

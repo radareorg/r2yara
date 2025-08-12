@@ -1,0 +1,16 @@
+[package]
+name = "core-r2yara"
+version = "0.1.0"
+edition = "2021"
+description = "radare2 core_yara plugin built with Cargo, using YARA‑X capi"
+license = "LGPL-3.0-or-later"
+
+[lib]
+name = "core_r2yara"
+crate-type = ["cdylib"]
+
+[dependencies]
+yara-x = "1.5.0"
+
+[build-dependencies]
+pkg-config = "0.3.25"

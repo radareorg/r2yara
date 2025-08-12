@@ -101,6 +101,18 @@ jobs:
 #        if-no-files-found: error
 #        name: build-macos
 #        path: dist/macos/r2yara-*.pkg
+  build-cargo:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Installing radare2
+      run: |
+        wget "https://github.com/radareorg/radare2/releases/download/${R2V}/radare2_${R2V}_amd64.deb"
+        wget "https://github.com/radareorg/radare2/releases/download/${R2V}/radare2-dev_${R2V}_amd64.deb"
+        sudo dpkg -i "radare2_${R2V}_amd64.deb"
+        sudo dpkg -i "radare2-dev_${R2V}_amd64.deb"
+    - name: Build with Cargo
+      run: cargo build --workspace --release
 
   check_release:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -111,6 +123,7 @@ jobs:
       - build-linux24
       - build-linux22
       - build-macos
+      - build-cargo
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
