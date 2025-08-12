@@ -2,6 +2,7 @@ ROOT=$(shell pwd)/..
 include ../config.mk
 
 CFLAGS+=-g
+LDFLAGS+=-lm
 
 MOD=core_r2yara
 MKDIR=mkdir -p

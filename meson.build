@@ -65,6 +65,7 @@ threads = dependency('threads')
 r2yara_core_plugin = library('core_r2yara',
   r2yara_core_sources,
   dependencies: [r_core, libyara, threads],
+  link_args: ['-lm'],
   include_directories: r2yara_incdirs,
   install: true,
   install_dir: r2_plugdir
