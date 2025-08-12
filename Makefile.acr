@@ -1,13 +1,18 @@
 include config.mk
 ifeq ($(USE_YARAX),1)
 CFLAGS+=USE_YARAX=1
+YARADEP=yara-x/target/release/libyara_x.rlib
+else
+YARADEP=
 endif
 
-all clean user-install install symstall user-uninstall uninstall:
+all clean user-install install symstall user-uninstall uninstall: $(YARADEP)
+	$(MAKE) -C src $@
+
 ifeq ($(USE_YARAX),1)
+yara-x/target/release/libyara_x.rlib:
 	$(MAKE) yarax
 endif
-	$(MAKE) -C src $@
 
 mrproper: clean
 	rm -f config.mk
