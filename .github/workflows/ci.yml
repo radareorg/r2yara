@@ -101,6 +101,12 @@ jobs:
 #        if-no-files-found: error
 #        name: build-macos
 #        path: dist/macos/r2yara-*.pkg
+  build-cargo:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build with Cargo
+      run: cargo build --workspace --release
 
   check_release:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -111,6 +117,7 @@ jobs:
       - build-linux24
       - build-linux22
       - build-macos
+      - build-cargo
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
