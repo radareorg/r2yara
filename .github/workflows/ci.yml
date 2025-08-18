@@ -15,7 +15,7 @@ jobs:
   build-linux24:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Installing radare2
       run: |
         wget "https://github.com/radareorg/radare2/releases/download/${R2V}/radare2_${R2V}_amd64.deb"
@@ -45,7 +45,7 @@ jobs:
   build-linux22:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         repository: radareorg/radare2
         ref: master
@@ -54,7 +54,7 @@ jobs:
       run: |
         cd radare2
         sys/install.sh
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         path: ./r2yara
@@ -72,7 +72,7 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Install dependencies
       run: |
         brew update
@@ -114,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # Download all git history and tags
       - name: Check if is a release
@@ -135,7 +135,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # Download all git history and tags
       - name: Extract r2y version
