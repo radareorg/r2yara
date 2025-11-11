@@ -33,6 +33,12 @@ fn main() {
     if let Ok(dep_root) = env::var("DEP_YARAX_CAPI_ROOT") {
         yx_include_dirs.push(PathBuf::from(dep_root).join("include"));
     }
+    // Fallback for local yoroxoldo
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    let local_include = manifest_dir.parent().unwrap().join("yoroxoldo").join("capi").join("include");
+    if local_include.exists() {
+        yx_include_dirs.push(local_include);
+    }
 
     let mut r2_cflags: Vec<String> = vec![];
     match pkg_config::probe_library("r_core") {

@@ -1,6 +1,16 @@
 [workspace]
 members = [
-  "core-r2yara",
+   "core-r2yara",
+   "yoroxoldo/lib",
+   "yoroxoldo/capi",
+   "yoroxoldo/cli",
+   "yoroxoldo/fmt",
+   "yoroxoldo/macros",
+   "yoroxoldo/parser",
+   "yoroxoldo/proto",
+   "yoroxoldo/proto-json",
+   "yoroxoldo/proto-yaml",
+   "yoroxoldo/py",
 ]
 resolver = "2"
 
@@ -90,11 +100,11 @@ x509-parser = "0.17.0"
 yansi = "1.0.1"
 ## Use crates.io published versions instead of a local checkout
 # If needed by members, uncomment and pin to the desired version.
-# yara-x = "1.5.0"
-# yara-x-fmt = "1.5.0"
-# yara-x-macros = "1.5.0"
-# yara-x-parser = "1.5.0"
-# yara-x-proto = "1.5.0"
-# yara-x-proto-yaml = "1.5.0"
-# yara-x-proto-json = "1.5.0"
+yara-x = { path = "yoroxoldo/lib", version = "1.5.0" }
+yara-x-fmt = { path = "yoroxoldo/fmt", version = "1.5.0" }
+yara-x-macros = { path = "yoroxoldo/macros", version = "1.5.0" }
+yara-x-parser = { path = "yoroxoldo/parser", version = "1.5.0" }
+yara-x-proto = { path = "yoroxoldo/proto", version = "1.5.0" }
+yara-x-proto-yaml = { path = "yoroxoldo/proto-yaml", version = "1.5.0" }
+yara-x-proto-json = { path = "yoroxoldo/proto-json", version = "1.5.0" }
 zip = "4.3.0"
