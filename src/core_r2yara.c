@@ -175,15 +175,19 @@ typedef struct {
 } YRXShowCtx;
 
 static void yrx_print_rule_name_cb(const struct YRX_RULE *rule, void *user_data) {
-	YRXShowCtx *ctx = (YRXShowCtx *) user_data;
+	YRXShowCtx *ctx = (YRXShowCtx *)user_data;
 	R2Yara *r2yara = ctx->r2yara;
-	const uint8_t *ident = NULL; size_t len = 0;
+	const uint8_t *ident = NULL;
+	size_t len = 0;
 	if (yrx_rule_identifier (rule, &ident, &len) != YRX_SUCCESS || !ident || len == 0) {
 		return;
 	}
-	char *s = (char *) malloc (len + 1);
-	if (!s) return;
-	memcpy (s, ident, len); s[len] = '\0';
+	char *s = (char *)malloc (len + 1);
+	if (!s) {
+		return;
+	}
+	memcpy (s, ident, len);
+	s[len] = '\0';
 	if (!ctx->filter || r_str_casestr (s, ctx->filter)) {
 		R2_PRINTF ("%s\n", s);
 	}
@@ -209,15 +213,23 @@ typedef struct {
 } YRXTagCtx;
 
 static void yrx_tag_filter_cb(const char *tag, void *user_data) {
-	YRXTagCtx *ctx = (YRXTagCtx *) user_data;
-	if (ctx->printed) return;
-	if (!ctx->search || !r_str_casestr (tag, ctx->search)) return;
+	YRXTagCtx *ctx = (YRXTagCtx *)user_data;
+	if (ctx->printed) {
+		return;
+	}
+	if (!ctx->search || !r_str_casestr (tag, ctx->search)) {
+		return;
+	}
 	R2Yara *r2yara = ctx->r2yara;
-	const uint8_t *ident = NULL; size_t len = 0;
+	const uint8_t *ident = NULL;
+	size_t len = 0;
 	if (yrx_rule_identifier (ctx->rule, &ident, &len) == YRX_SUCCESS && ident && len) {
-		char *s = (char *) malloc (len + 1);
-		if (!s) return;
-		memcpy (s, ident, len); s[len] = '\0';
+		char *s = (char *)malloc (len + 1);
+		if (!s) {
+			return;
+		}
+		memcpy (s, ident, len);
+		s[len] = '\0';
 		R2_PRINTF ("%s\n", s);
 		free (s);
 		ctx->printed = true;
@@ -347,7 +359,10 @@ static bool yr_scan(R2Yara *r2yara, void *to_scan, size_t to_scan_size) {
 		YRX_RESULT res = yrx_scanner_create (rules, &scanner);
 		if (res == YRX_SUCCESS) {
 			yrx_scanner_on_matching_rule (scanner, callback, &ctx);
-			yrx_scanner_scan (scanner, to_scan, to_scan_size);
+			res = yrx_scanner_scan (scanner, to_scan, to_scan_size);
+			if (res != YRX_SUCCESS) {
+				// handle error, but continue
+			}
 		}
 		if (scanner) {
 			yrx_scanner_destroy (scanner);
@@ -357,20 +372,22 @@ static bool yr_scan(R2Yara *r2yara, void *to_scan, size_t to_scan_size) {
 	free (ctx.rule_ident);
 #else
 	r_list_foreach (r2yara->rules_list, rules_it, rules) {
-		yr_rules_scan_mem (rules, to_scan, to_scan_size, 0, callback, (void*)r2yara, 0);
+		if (yr_rules_scan_mem (rules, to_scan, to_scan_size, 0, callback, (void *)r2yara, 0) != 0) {
+			// handle error
+		}
 	}
 #endif
 	return true;
 }
 
 static bool yr_vscan(R2Yara *r2yara, ut64 from, int to_scan_size) {
-	eprintf ("-> 0x%"PFMT64x" + %d\n", from, to_scan_size);
+	R_LOG_DEBUG ("-> 0x%" PFMT64x " + %d\n", from, to_scan_size);
 	RCore *core = r2yara->core;
 	if (to_scan_size < 1) {
 		R_LOG_ERROR ("Invalid file size");
 		return false;
 	}
-	void* to_scan = malloc (to_scan_size);
+	void *to_scan = malloc (to_scan_size);
 	if (!to_scan) {
 		R_LOG_ERROR ("Something went wrong during memory allocation");
 		return false;
@@ -518,7 +535,6 @@ static int cmd_yara_tag(R2Yara *r2yara, const char *search_tag) {
 	r_list_foreach (r2yara->rules_list, rules_it, rules) {
 		yr_rules_foreach (rules, rule) {
 			yr_rule_tags_foreach (rule, tag_name) {
-				R_LOG_WARN ("Invalid option");
 				if (search_tag && r_str_casestr (tag_name, search_tag)) {
 					R2_PRINTF ("%s\n", rule->identifier);
 					break;
@@ -749,8 +765,12 @@ static int cmd_yara_gen(R2Yara *r2yara, const char *input) {
 	case 'z':
 		{
 			char *s = r_core_cmd_str (r2yara->core, "axff~str.~[3]~$$");
+			if (!s) {
+				break;
+			}
 			r_str_trim (s);
 			RList *words = r_str_split_list (s, "\n", 0);
+			words->free = free;
 			RListIter *iter;
 			char *word;
 			r_list_foreach (words, iter, word) {
