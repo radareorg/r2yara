@@ -15,7 +15,7 @@ yara-x/target/release/libyara_x.rlib:
 endif
 
 fmt:
-	clang-format-radare2 src/*.c
+	clang-format-radare2 src/*.c yara-r2-module/src/*.c
 
 mrproper: clean
 	rm -f config.mk
