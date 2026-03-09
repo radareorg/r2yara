@@ -62,9 +62,9 @@ define_function(import_isss) //ordinal, bind, type, name
     ordinal = json_integer_value(json_object_get(value, "ordinal"));
 
     if (arg_ordinal == ordinal)                      { result += 1; }
-    if (arg_bind && strcasecmp(arg_bind, bind) == 0) { result += 1; }
-    if (arg_type && strcasecmp(arg_type, type) == 0) { result += 1; }
-    if (arg_name && strcasecmp(arg_name, name) == 0) { result += 1; }
+    if (arg_bind && bind && strcasecmp(arg_bind, bind) == 0) { result += 1; }
+    if (arg_type && type && strcasecmp(arg_type, type) == 0) { result += 1; }
+    if (arg_name && name && strcasecmp(arg_name, name) == 0) { result += 1; }
     if (result == 4) { break; }
   }
   
@@ -109,9 +109,9 @@ define_function(import_issr) //ordinal, bind, type, name
     ordinal = json_integer_value(json_object_get(value, "ordinal"));
 
     if (arg_ordinal == ordinal)                      { result += 1; }
-    if (arg_bind && strcasecmp(arg_bind, bind) == 0) { result += 1; }
-    if (arg_type && strcasecmp(arg_type, type) == 0) { result += 1; }
-    if (yr_re_match(arg_name, name) > 0)             { result += 1; }
+    if (arg_bind && bind && strcasecmp(arg_bind, bind) == 0) { result += 1; }
+    if (arg_type && type && strcasecmp(arg_type, type) == 0) { result += 1; }
+    if (name && yr_re_match(arg_name, name) > 0)             { result += 1; }
     if (result == 4) { break; }
   }
   
