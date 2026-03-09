@@ -30,7 +30,7 @@
 #define R2_PRINTF(...) r_cons_printf(__VA_ARGS__)
 #endif
 
-#define YR_VSCAN_MAX_CHUNK ((size_t)(16 * 1024 * 1024))
+#define YR_VSCAN_MAX_CHUNK ((size_t) (16 * 1024 * 1024))
 
 // clang-format off
 const char *short_help_message_yrg[] = {
@@ -286,8 +286,7 @@ static int callback(int message, void *msg_data, void *user_data) {
 	return CALLBACK_CONTINUE;
 }
 
-static void compiler_callback(int error_level, const char *file_name,
-	int line_number, const char *message, void *user_data) {
+static void compiler_callback(int error_level, const char *file_name, int line_number, const char *message, void *user_data) {
 	// TODO depending on error_level. use R_LOG_WARN, ERROR or INFO
 	R_LOG_INFO ("file: %s line_number: %d: %s", file_name, line_number, message);
 	return;
@@ -345,8 +344,7 @@ static int callback(YR_SCAN_CONTEXT *context, int message, void *msg_data, void 
 	return CALLBACK_CONTINUE;
 }
 
-static void compiler_callback(int error_level, const char *file_name,
-	int line_number, const struct R2YR_RULE *rule, const char *message, void *user_data) {
+static void compiler_callback(int error_level, const char *file_name, int line_number, const struct R2YR_RULE *rule, const char *message, void *user_data) {
 	// TODO depending on error_level. use R_LOG_WARN, ERROR or INFO
 	R_LOG_INFO ("file: %s line_number: %d %s", file_name, line_number, message);
 	return;
@@ -398,7 +396,7 @@ static bool yr_vscan(R2Yara *r2yara, ut64 from, ut64 to_scan_size) {
 		return false;
 	}
 	for (ut64 offset = 0; offset < to_scan_size; offset += chunk_size) {
-		size_t remaining = (size_t)(to_scan_size - offset);
+		size_t remaining = (size_t) (to_scan_size - offset);
 		size_t scan_size = R_MIN (chunk_size, remaining);
 		int result = r_io_read_at (core->io, from + offset, to_scan, (int)scan_size);
 		if (!result) {
@@ -514,7 +512,8 @@ static int cmd_yara_tags(R2Yara *r2yara) {
 			yr_rule_tags_foreach (rule, tag_name) {
 				if (!r_list_find (tag_list, tag_name, (RListComparator)strcmp)) {
 					r_list_add_sorted (tag_list,
-						strdup (tag_name), (RListComparator)strcmp);
+						strdup (tag_name),
+						(RListComparator)strcmp);
 				}
 			}
 		}
