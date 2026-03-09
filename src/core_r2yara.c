@@ -1,4 +1,4 @@
-/* radare - LGPLv3 - Copyright 2014-2025 - pancake, jvoisin, jfrankowski */
+/* radare - LGPLv3 - Copyright 2014-2026 - pancake, jvoisin, jfrankowski */
 
 #include <r_core.h>
 #if USE_YARAX
@@ -32,6 +32,7 @@
 
 #define YR_VSCAN_MAX_CHUNK ((size_t)(16 * 1024 * 1024))
 
+// clang-format off
 const char *short_help_message_yrg[] = {
 	"Usage: yrg", "[action] [args..]", " load and run yara rules inside r2",
 	"yrg-", "", "delete last pattern added to the yara rule",
@@ -71,6 +72,7 @@ const char *long_help_message[] = {
 	"yara", " version", "Show version information about r2yara and yara",
 	NULL
 };
+// clang-format on
 
 #if R2_VERSION_NUMBER < 50809
 static inline char *r_str_after(char *s, char c) {
@@ -1102,11 +1104,7 @@ static bool yara_in_callback(void *user, void *data) {
 	RCore *core = (RCore *)user;
 	RConfigNode *node = (RConfigNode *)data;
 	if (*node->value == '?') {
-#if R2_VERSION_NUMBER >= 50909
 		r_cons_printf (core->cons,
-#else
-		r_cons_printf (
-#endif
 			"range              search between .from/.to boundaries\n"
 			"flag               find boundaries in ranges defined by flags larger than 1 byte\n"
 			"flag:[glob]        find boundaries in flags matching given glob and larger than 1 byte\n"
@@ -1161,7 +1159,6 @@ static void setup_config(R2Yara *r2yara) {
 	r_config_lock (cfg, true);
 }
 
-#if R2_VERSION_NUMBER >= 50909
 static bool cmd_yara_init(RCorePluginSession *cps) {
 	RCore *core = cps->core;
 	R2Yara *r2yara = R_NEW0 (R2Yara);
@@ -1180,28 +1177,6 @@ static bool cmd_yara_init(RCorePluginSession *cps) {
 	cps->data = r2yara;
 	return true;
 }
-#else
-static int cmd_yara_init(void *user, const char *cmd) {
-	RCmd *rcmd = (RCmd *)user;
-	RCore *core = (RCore *)rcmd->data;
-
-	R2Yara *r2yara = &Gr2yara;
-	memset (r2yara, 0, sizeof (R2Yara));
-	r2yara->iova = true;
-	r2yara->core = core;
-	r2yara->rules_list = r_list_newf ((RListFree)R2YR_RULES_DESTROY);
-	r2yara->genstrings = r_list_newf (free);
-#if !USE_YARAX
-	yr_initialize ();
-#endif
-	setup_config (r2yara);
-
-	cmd_yara_load_default_rules (r2yara);
-	r2yara->initialized = true;
-	r2yara->flagidx = 0;
-	return true;
-}
-#endif
 
 static bool yaracall(R2Yara *r2yara, const char *input) {
 	if (r_str_startswith (input, "yr")) {
@@ -1211,34 +1186,16 @@ static bool yaracall(R2Yara *r2yara, const char *input) {
 	if (!r_str_startswith (input, "yara")) {
 		return false;
 	}
-#if R2_VERSION_NUMBER < 50909
-	if (!r2yara->initialized) {
-		if (!cmd_yara_init (r2yara, NULL)) {
-			return false;
-		}
-	}
-#endif
 	const char *args = input[4]? input + 5: input + 4;
 	cmd_yara_process (r2yara, args);
 	return true;
 }
 
-#if R2_VERSION_NUMBER >= 50909
 static bool cmd_yara_call(RCorePluginSession *cps, const char *input) {
 	R2Yara *r2yara = cps->data;
 	return yaracall (r2yara, input);
 }
-#else
-static int cmd_yara_call(void *user, const char *input) {
-	RCmd *rcmd = (RCmd *)user;
-	RCore *core = (RCore *)rcmd->data;
-	R2Yara *r2yara = &Gr2yara;
-	r2yara->core = core;
-	return yaracall (r2yara, input);
-}
-#endif
 
-#if R2_VERSION_NUMBER >= 50909
 static bool cmd_yara_fini(RCorePluginSession *cps) {
 	// RCore* core = cps->core;
 	R2Yara *r2yara = cps->data;
@@ -1253,55 +1210,24 @@ static bool cmd_yara_fini(RCorePluginSession *cps) {
 	free (cps->data);
 	return true;
 }
-#else
-static int cmd_yara_fini(void *user, const char *cmd) {
-	RCmd *rcmd = (RCmd *)user;
-	RCore *core = (RCore *)rcmd->data;
-	R2Yara *r2yara = &Gr2yara;
-	if (r2yara->initialized) {
-		r_list_free (r2yara->rules_list);
-		r_list_free (r2yara->genstrings);
-#if !USE_YARAX
-		yr_finalize ();
-#endif
-		r2yara->initialized = false;
-	}
-	return true;
-}
-#endif
 
 RCorePlugin r_core_plugin_yara = {
-#if R2_VERSION_NUMBER < 50809
-	.name = "yara",
-	.desc = "YARA integration",
-	.license = "LGPL",
-	.version = R2Y_VERSION,
-#else
 	.meta = {
 		.name = "yara",
 		.desc = "YARA integration",
 		.license = "LGPL",
 		.version = R2Y_VERSION,
 	},
-#endif
-#if R2_VERSION_NUMBER >= 50909
 	.call = cmd_yara_call,
 	.init = cmd_yara_init,
 	.fini = cmd_yara_fini
-#else
-	.call = cmd_yara_call,
-	.init = cmd_yara_init,
-	.fini = cmd_yara_fini
-#endif
 };
 
 #ifndef CORELIB
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_CORE,
 	.data = &r_core_plugin_yara,
-#if R2_VERSION_NUMBER >= 50909
 	.abiversion = R2_ABIVERSION,
-#endif
 	.version = R2_VERSION
 };
 #endif
