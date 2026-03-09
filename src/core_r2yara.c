@@ -30,6 +30,8 @@
 #define R2_PRINTF(...) r_cons_printf(__VA_ARGS__)
 #endif
 
+#define YR_VSCAN_MAX_CHUNK ((size_t)(16 * 1024 * 1024))
+
 const char *short_help_message_yrg[] = {
 	"Usage: yrg", "[action] [args..]", " load and run yara rules inside r2",
 	"yrg-", "", "delete last pattern added to the yara rule",
@@ -380,27 +382,36 @@ static bool yr_scan(R2Yara *r2yara, void *to_scan, size_t to_scan_size) {
 	return true;
 }
 
-static bool yr_vscan(R2Yara *r2yara, ut64 from, int to_scan_size) {
-	R_LOG_DEBUG ("-> 0x%" PFMT64x " + %d\n", from, to_scan_size);
+static bool yr_vscan(R2Yara *r2yara, ut64 from, ut64 to_scan_size) {
+	R_LOG_DEBUG ("-> 0x%" PFMT64x " + %" PFMT64u "\n", from, to_scan_size);
 	RCore *core = r2yara->core;
 	if (to_scan_size < 1) {
 		R_LOG_ERROR ("Invalid file size");
 		return false;
 	}
-	void *to_scan = malloc (to_scan_size);
+	size_t chunk_size = R_MIN ((ut64)YR_VSCAN_MAX_CHUNK, to_scan_size);
+	void *to_scan = malloc (chunk_size);
 	if (!to_scan) {
 		R_LOG_ERROR ("Something went wrong during memory allocation");
 		return false;
 	}
-	int result = r_io_read_at (core->io, from, to_scan, to_scan_size);
-	if (!result) {
-		R_LOG_ERROR ("Something went wrong during r_io_read_at");
-		free (to_scan);
-		return false;
+	for (ut64 offset = 0; offset < to_scan_size; offset += chunk_size) {
+		size_t remaining = (size_t)(to_scan_size - offset);
+		size_t scan_size = R_MIN (chunk_size, remaining);
+		int result = r_io_read_at (core->io, from + offset, to_scan, (int)scan_size);
+		if (!result) {
+			R_LOG_ERROR ("Something went wrong during r_io_read_at");
+			free (to_scan);
+			return false;
+		}
+		r2yara->map_addr = from + offset;
+		if (!yr_scan (r2yara, to_scan, scan_size)) {
+			free (to_scan);
+			return false;
+		}
 	}
-	bool res = yr_scan (r2yara, to_scan, to_scan_size);
 	free (to_scan);
-	return res;
+	return true;
 }
 
 static bool yr_pscan(R2Yara *r2yara) {
@@ -455,8 +466,7 @@ static int cmd_yara_scan(R2Yara *r2yara, const char *R_NULLABLE option) {
 			ut64 begin = r_io_map_begin (range);
 			ut64 end = r_io_map_end (range);
 			ut64 size = end - begin;
-			r2yara->map_addr = begin;
-			yr_vscan (r2yara, begin, (int)size);
+			yr_vscan (r2yara, begin, size);
 		}
 		return true;
 	}
