@@ -1173,7 +1173,6 @@ char* r2cmd(R2Pipe *r2, const char *cmd) {
 #define BLOCK_SIZE_R2 1024
 
 void r2wx(R2Pipe *r2, const uint8_t *bytes, const int length) {
-  char *buf_ptr;
   int i;
   //int number_of_blocks = (length/BLOCK_SIZE_R2)+1;
   //int written_bytes = 0;
@@ -1188,16 +1187,14 @@ void r2wx(R2Pipe *r2, const uint8_t *bytes, const int length) {
       to_write_len = BLOCK_SIZE_R2;
     }
     //printf("TOWRITE LEN: %d\n", to_write_len);
-    buf_ptr = (char*)malloc(sizeof(char)*((to_write_len*2)+5));
-    sprintf(buf_ptr, "wxs %s", r_hex_bin2strdup(bytes+offset, to_write_len));
-    //printf("%s\n", buf_ptr);
+    char *s = r_str_newf ("'wxs %s", r_hex_bin2strdup(bytes+offset, to_write_len));
     offset += to_write_len;
-    char *msg = r2p_cmd (r2, buf_ptr);
+    char *msg = r2p_cmd (r2, s);
     if (msg) {
       //printf("[r2wx]: %s\n", msg);
       free (msg);
     }
-    free(buf_ptr);
+    free(s);
   }
 }
 
@@ -1289,15 +1286,9 @@ int module_load(
   }
 
   if (json == NULL && module_data == NULL) {
-    msg = (char*)malloc(sizeof(char)*256);
-    if (msg) {
-      //sprintf(msg, "r2 -q0 malloc://%"PRIu64, context->file_size);
-      sprintf(msg, "r2 -q0 -e bin.strings=false malloc://%"PRIu64, context->file_size);
-      //printf(msg);
-      //printf('\n');
-      r2 = r2p_open(msg);
-      free(msg); 
-    } 
+    char *msg = r_str_newf ("r2 -q0 -e bin.strings=false malloc://%"PRIu64, context->file_size);
+    r2 = r2p_open(msg);
+    free(msg); 
 
     if (r2) {
       foreach_memory_block(iterator, block)
@@ -1374,8 +1365,9 @@ int module_load(
       char* hash_value;
       for (i=0;i<NUMBER_OF_HASHES;i++) {
         this_hash = json_object();
-        sprintf(msg, "ph %s $s @ 0", hash_names[i]);
-        hash_value = r2cmd(r2, msg);
+        char *s = r_str_newf ("'ph %s $s @ 0", hash_names[i]);
+        hash_value = r2cmd(r2, s);
+	free (s);
         hash_value[strlen(hash_value)-1] = '\0';
         json_object_set_new( this_hash, "name", json_string(hash_names[i]) );
         json_object_set_new( this_hash, "hash", json_string(hash_value) );
