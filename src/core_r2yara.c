@@ -101,6 +101,16 @@ typedef struct {
 static R_TH_LOCAL R2Yara Gr2yara = { 0 };
 #endif
 
+static void print_match_bytes(R2Yara *r2yara, const ut8 *data, size_t len) {
+	char *hex = r_hex_bin2strdup (data, (int)len);
+	if (hex) {
+		R2_PRINTF ("%s\n", hex);
+		free (hex);
+	} else {
+		R2_PRINTF ("\n");
+	}
+}
+
 /* Because of how the rules are compiled, we are not allowed to add more
  * rules to a compiler once it has compiled. That's why we keep a list
  * of those compiled rules.
@@ -119,7 +129,6 @@ static void yrx_match_cb(const struct YRX_MATCH *match_, void *user_data) {
 	YRXScanCtx *ctx = (YRXScanCtx *)user_data;
 	R2Yara *r2yara = ctx->r2yara;
 	RCore *core = r2yara->core;
-	RPrint *print = core->print;
 
 	ut64 n = r2yara->map_addr + (ut64)match_->offset;
 	if (!r2yara->iova) {
@@ -132,15 +141,11 @@ static void yrx_match_cb(const struct YRX_MATCH *match_, void *user_data) {
 	r_strf_var (flag, 256, "yara%d.%s_%u", r2yara->flagidx, ctx->rule_ident? ctx->rule_ident: "rule", ctx->ruleidx);
 	if (r2yara->print_strings) {
 		R2_PRINTF ("0x%08" PFMT64x ": %s : ", n, flag);
-#if R2_VERSION_NUMBER >= 50909
 		if (ctx->buf && match_->offset + match_->length <= ctx->buflen) {
-			r_print_bytes (print, ctx->buf + match_->offset, match_->length, "%02x", 0);
+			print_match_bytes (r2yara, ctx->buf + match_->offset, match_->length);
+		} else {
+			R2_PRINTF ("\n");
 		}
-#else
-		if (ctx->buf && match_->offset + match_->length <= ctx->buflen) {
-			r_print_bytes (print, ctx->buf + match_->offset, match_->length, "%02x");
-		}
-#endif
 	}
 	r_flag_set (core->flags, flag, n, match_->length);
 	ctx->ruleidx++;
@@ -249,7 +254,6 @@ static void yrx_rule_tags_filter_cb(const struct YRX_RULE *rule, void *user_data
 static int callback(int message, void *msg_data, void *user_data) {
 	R2Yara *r2yara = (R2Yara *)user_data;
 	RCore *core = r2yara->core;
-	RPrint *print = core->print;
 	unsigned int ruleidx;
 	st64 offset = 0;
 	ut64 n = 0;
@@ -275,7 +279,7 @@ static int callback(int message, void *msg_data, void *user_data) {
 				r_strf_var (flag, 256, "%s%d.%s_%d", "yara", flagidx, rule->identifier, ruleidx);
 				if (r2yara->print_strings) {
 					r_cons_printf ("0x%08" PFMT64x ": %s : ", n + offset, flag);
-					r_print_bytes (print, match->data, match->data_length, "%02x");
+					print_match_bytes (r2yara, match->data, match->data_length);
 				}
 				r_flag_set (core->flags, flag, n + offset, match->data_length);
 				ruleidx++;
@@ -295,7 +299,6 @@ static void compiler_callback(int error_level, const char *file_name, int line_n
 static int callback(YR_SCAN_CONTEXT *context, int message, void *msg_data, void *user_data) {
 	R2Yara *r2yara = (R2Yara *)user_data;
 	RCore *core = r2yara->core;
-	RPrint *print = core->print;
 	ut64 n = 0;
 	ut64 map_addr = r2yara->map_addr;
 	R2YR_RULE *rule = msg_data;
@@ -328,11 +331,7 @@ static int callback(YR_SCAN_CONTEXT *context, int message, void *msg_data, void 
 				r_strf_var (flag, 256, "yara%d.%s_%d", r2yara->flagidx, rule->identifier, ruleidx);
 				if (r2yara->print_strings) {
 					R2_PRINTF ("0x%08" PFMT64x ": %s : ", n, flag);
-#if R2_VERSION_NUMBER >= 50909
-					r_print_bytes (print, match->data, match->data_length, "%02x", 0);
-#else
-					r_print_bytes (print, match->data, match->data_length, "%02x");
-#endif
+					print_match_bytes (r2yara, match->data, match->data_length);
 				}
 				r_flag_set (core->flags, flag, n, match->data_length);
 				ruleidx++;
