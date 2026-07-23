@@ -776,15 +776,13 @@ err_exit:
 }
 
 static char *yarastring(const char *s) {
-	RStrBuf *sb = r_strbuf_new ("\"");
-	char *a = strdup (s);
-	r_str_trim (a);
-	a = r_str_replace_all (a, "\n", "\\n");
-	r_strbuf_append (sb, a);
-	r_strbuf_append (sb, "\"");
+	char *a = r_str_trim_dup (s);
+	r_str_unescape (a);
+	char *escaped = r_str_escape_raw ((const ut8 *)a, strlen (a));
 	free (a);
-	return r_strbuf_drain (sb);
-	;
+	char *res = r_str_newf ("\"%s\"", escaped);
+	free (escaped);
+	return res;
 }
 
 static int cmd_yara_gen(R2Yara *r2yara, const char *input) {
