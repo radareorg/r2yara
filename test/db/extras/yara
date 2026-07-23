@@ -80,6 +80,23 @@ SHA512_Constants
 EOF
 RUN
 
+NAME=yara: long scan modes
+FILE=malloc://32
+CMDS=<<EOF
+yr-
+w Test
+yrgs
+yr+
+yara scan
+yara scanS
+EOF
+EXPECT=<<EOF
+rulename
+rulename
+0x00000000: yara1.rulename_0 : 54657374
+EOF
+RUN
+
 NAME=yara: versions
 FILE=malloc://1024
 CMDS=<<EOF

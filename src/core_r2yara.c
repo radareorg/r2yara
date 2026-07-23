@@ -951,10 +951,11 @@ static int cmd_yara_process(R2Yara *r2yara, const char *input) {
 		res = cmd_yara_clear (r2yara);
 	} else if (r_str_startswith (inp, "list")) {
 		res = cmd_yara_list (r2yara);
-	} else if (r_str_startswith (inp, "scanS") || r_str_startswith (inp, "scan S")) {
-		res = cmd_yara_scan (r2yara, "q");
+	} else if (r_str_startswith (inp, "scanS")
+			|| (r_str_startswith (inp, "scan") && r_str_eq (arg, "S"))) {
+		res = cmd_yara_scan (r2yara, NULL);
 	} else if (r_str_startswith (inp, "scan")) {
-		res = cmd_yara_scan (r2yara, arg);
+		res = cmd_yara_scan (r2yara, arg? arg: "q");
 	} else if (r_str_startswith (inp, "show")) {
 		res = cmd_yara_show (r2yara, arg);
 	} else if (r_str_startswith (inp, "tags")) {
