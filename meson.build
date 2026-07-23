@@ -55,15 +55,10 @@ libyara = dependency('yara')
 
 r2yara_incdirs = include_directories(incdirs)
 
-r2yara_core_sources = [
-  r2yara_sources,
-  'src/core_r2yara.c'
-]
-
 threads = dependency('threads')
 
 r2yara_core_plugin = library('core_r2yara',
-  r2yara_core_sources,
+  r2yara_sources,
   dependencies: [r_core, libyara, threads],
   link_args: ['-lm'],
   include_directories: r2yara_incdirs,
