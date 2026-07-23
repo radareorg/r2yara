@@ -723,20 +723,24 @@ static RStrBuf *get_current_rule(R2Yara *r2yara) {
 }
 
 static void cmd_yara_gen_show(R2Yara *r2yara) {
-	R2_PRINTF ("%s", r_strbuf_tostring (get_current_rule (r2yara)));
+	RStrBuf *rule = get_current_rule (r2yara);
+	R2_PRINTF ("%s", r_strbuf_tostring (rule));
+	r_strbuf_free (rule);
 }
 
 static void cmd_yara_add_current(R2Yara *r2yara) {
 	R2YR_COMPILER *compiler = NULL;
 	R2YR_RULES *yr_rules = NULL;
+	RStrBuf *rule = NULL;
 
 	if (r_list_empty (r2yara->genstrings)) {
 		R_LOG_WARN ("Empty pattern, see 'yrg?' to find out which subcommands use to append patterns to the rule");
 		return;
 	}
+	rule = get_current_rule (r2yara);
 #if USE_YARAX
 	{
-		const char *src = r_strbuf_tostring (get_current_rule (r2yara));
+		const char *src = r_strbuf_tostring (rule);
 		if (yrx_compile (src, &yr_rules) != YRX_SUCCESS) {
 			logerr (NULL, NULL);
 			goto err_exit;
@@ -747,7 +751,7 @@ static void cmd_yara_add_current(R2Yara *r2yara) {
 		logerr (compiler, NULL);
 		goto err_exit;
 	}
-	if (yr_compiler_add_string (compiler, r_strbuf_tostring (get_current_rule (r2yara)), NULL) > 0) {
+	if (yr_compiler_add_string (compiler, r_strbuf_tostring (rule), NULL) > 0) {
 		logerr (compiler, NULL);
 		goto err_exit;
 	}
@@ -761,6 +765,7 @@ static void cmd_yara_add_current(R2Yara *r2yara) {
 	R_LOG_INFO ("Rule successfully added");
 
 err_exit:
+	r_strbuf_free (rule);
 #if !USE_YARAX
 	if (compiler != NULL) {
 		R2YR_COMPILER_DESTROY (compiler);
