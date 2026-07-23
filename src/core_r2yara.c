@@ -456,6 +456,7 @@ static int cmd_yara_scan(R2Yara *r2yara, const char *R_NULLABLE option) {
 	RList *ranges = r_core_get_boundaries_prot (core, 0, yara_in, NULL);
 	RListIter *iter;
 	RIOMap *range;
+	bool res = false;
 	r_flag_space_push (core->flags, "yara");
 	r2yara->iova = r_config_get_b (core->config, "yara.va");
 #if 0
@@ -469,20 +470,25 @@ static int cmd_yara_scan(R2Yara *r2yara, const char *R_NULLABLE option) {
 			r2yara->print_strings = false;
 		} else {
 			R_LOG_ERROR ("Invalid option");
-			return false;
+			goto beach;
 		}
 	}
 	r2yara->map_addr = 0;
-	if (!r_list_empty (ranges)) {
+	if (ranges && !r_list_empty (ranges)) {
 		r_list_foreach (ranges, iter, range) {
 			ut64 begin = r_io_map_begin (range);
 			ut64 end = r_io_map_end (range);
 			ut64 size = end - begin;
 			yr_vscan (r2yara, begin, size);
 		}
-		return true;
+		res = true;
+	} else {
+		res = yr_pscan (r2yara);
 	}
-	return yr_pscan (r2yara);
+beach:
+	r_list_free (ranges);
+	r_flag_space_pop (core->flags);
+	return res;
 }
 
 static int cmd_yara_show(R2Yara *r2yara, const char *name) {
