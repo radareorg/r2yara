@@ -491,7 +491,7 @@ beach:
 	return res;
 }
 
-static int cmd_yara_show(R2Yara *r2yara, const char *name) {
+static int cmd_yara_show(R2Yara *r2yara, const char *R_NULLABLE name) {
 	/* List loaded rules containing name */
 	RListIter *rules_it;
 	R2YR_RULES *rules;
@@ -503,7 +503,7 @@ static int cmd_yara_show(R2Yara *r2yara, const char *name) {
 		yrx_rules_iter (rules, yrx_print_rule_name_cb, &ctx);
 #else
 		yr_rules_foreach (rules, rule) {
-			if (r_str_casestr (rule->identifier, name)) {
+			if (!name || r_str_casestr (rule->identifier, name)) {
 				R2_PRINTF ("%s\n", rule->identifier);
 			}
 		}
