@@ -1,6 +1,19 @@
 /* radare - LGPLv3 - Copyright 2014-2026 - pancake, jvoisin, jfrankowski */
 
 #include <r_core.h>
+
+#ifndef R_LIB_ABIVERSION
+#define R_LIB_ABIVERSION R2_ABIVERSION
+#endif
+
+#if R_LIB_ABIVERSION >= 125
+#define r2yara_cmd_help(core, msg) r_cons_cmd_help ((core)->cons, msg)
+#define r2yara_cmd_help_match(core, msg, command) r_cons_cmd_help_match ((core)->cons, msg, command, 0, false)
+#else
+#define r2yara_cmd_help(core, msg) r_core_cmd_help (core, msg)
+#define r2yara_cmd_help_match(core, msg, command) r_core_cmd_help_contains (core, msg, command)
+#endif
+
 #if USE_YARAX
 #include <yara_x.h>
 #define YR_MAJOR_VERSION 6
@@ -770,7 +783,7 @@ static int cmd_yara_gen(R2Yara *r2yara, const char *input) {
 		cmd_yara_gen_show (r2yara);
 		break;
 	case '?':
-		r_core_cmd_help (r2yara->core, short_help_message_yrg);
+		r2yara_cmd_help (r2yara->core, short_help_message_yrg);
 		break;
 	case 'z':
 		{
@@ -942,7 +955,7 @@ static int cmd_yara_process(R2Yara *r2yara, const char *input) {
 	} else if (r_str_startswith (input, "ver")) {
 		res = cmd_yara_version (r2yara);
 	} else {
-		r_core_cmd_help (r2yara->core, long_help_message);
+		r2yara_cmd_help (r2yara->core, long_help_message);
 	}
 	free (inp);
 	return res;
@@ -958,7 +971,7 @@ static int cmd_yr(R2Yara *r2yara, const char *input) {
 	switch (*input) {
 	case '?': // "yr?"
 	case 0:
-		r_core_cmd_help (r2yara->core, short_help_message);
+		r2yara_cmd_help (r2yara->core, short_help_message);
 		break;
 	case 'l':
 		cmd_yara_list (r2yara);
@@ -986,7 +999,7 @@ static int cmd_yr(R2Yara *r2yara, const char *input) {
 	case 't': // "yrt"
 		if (input[1]) {
 			if (input[1] == '?') {
-				r_core_cmd_help_contains (r2yara->core, short_help_message, "yrt");
+				r2yara_cmd_help_match (r2yara->core, short_help_message, "yrt");
 			} else {
 				cmd_yara_tag (r2yara, arg);
 			}
