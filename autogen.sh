@@ -21,7 +21,6 @@ else
 	echo "Running acr..."
 	acr -p
 fi
-exit 0
 V=`./configure -qV | cut -d - -f -1`
 meson rewrite kwargs set project / version "$V"
 if [ -n "$1" ]; then

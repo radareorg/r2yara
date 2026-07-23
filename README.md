@@ -5,13 +5,13 @@ r2 and YARA, better together!
 
 ## License and Author(s)
 
-LGPLv3 - Copyright 2014-2024 - pancake, jvoisin, jfrankowski, Sylvain Pelissier
+LGPLv3 - Copyright 2014-2026 - pancake, jvoisin, jfrankowski, Sylvain Pelissier
 
 ## Installation
 
 r2yara can be installed with `r2pm` tool running this command:
 
-```sh
+```bash
 r2pm -ci r2yara
 ```
 
@@ -19,7 +19,7 @@ r2pm -ci r2yara
 
 After installation, you will get the `yr` command inside `radare2` shell
 
-```
+```console
 [0x100003a84]> yr?
 Usage: yr [action] [args..]   load and run yara rules inside r2
 | yr [file]        add yara rules from file
@@ -56,7 +56,7 @@ To start using r2yara to create YARA rules automatically, follow these steps:
 
 **Generate a YARA rule:**
 
-```
+```console
 [0x100003a84]> yrg
 WARN: See 'yrg?' to find out which subcommands use to append patterns to the rule
 rule rulename : test {
@@ -72,25 +72,25 @@ This shows the current YARA rule.
 
 **Add strings from the binary as patterns:**
 
-```
+```console
 [0x100003a84]> yrgs
 ```
 
 **Add hex patterns:**
 
-```
+```console
 [0x100003a84]> yrgx
 ```
 
 **Optionally, add function signatures:**
 
-```
+```console
 [0x100003a84]> yrgf
 ```
 
 **Once you've added the desired patterns, add the currently generated yara rule:**
 
-```
+```console
 [0x100003a84]> yr+
 [0x100003a84]> yrl
 rulename
