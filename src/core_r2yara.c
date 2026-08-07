@@ -6,6 +6,10 @@
 #define R_LIB_ABIVERSION R2_ABIVERSION
 #endif
 
+#ifndef R2Y_VERSION
+#define R2Y_VERSION "1.5.0"
+#endif
+
 #if R_LIB_ABIVERSION >= 125
 #define r2yara_cmd_help(core, msg) r_cons_cmd_help ((core)->cons, msg)
 #define r2yara_cmd_help_match(core, msg, command) r_cons_cmd_help_match ((core)->cons, msg, command, 0, false)
@@ -1232,7 +1236,7 @@ static bool cmd_yara_fini(RCorePluginSession *cps) {
 	return true;
 }
 
-RCorePlugin r_core_plugin_yara = {
+RCorePlugin r_core_plugin_r2yara = {
 	.meta = {
 		.name = "yara",
 		.desc = "YARA integration",
@@ -1247,7 +1251,7 @@ RCorePlugin r_core_plugin_yara = {
 #ifndef CORELIB
 RLibStruct radare_plugin = {
 	.type = R_LIB_TYPE_CORE,
-	.data = &r_core_plugin_yara,
+	.data = &r_core_plugin_r2yara,
 	.abiversion = R2_ABIVERSION,
 	.version = R2_VERSION
 };
