@@ -3,7 +3,7 @@ project(
   ['c'],
   license : 'LGPL3',
   meson_version : '>=0.50.1',
-version : '1.5.0'
+version : '1.5.2'
 )
 
 r2yara_sources = [
